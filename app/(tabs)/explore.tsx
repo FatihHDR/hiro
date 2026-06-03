@@ -1,112 +1,180 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export default function TabTwoScreen() {
+const ALL_MISSIONS = [
+  { id: '1', title: 'Electronics Repair', type: 'electronics', color: '#00BFFF', status: 'Active', distance: '1.2km', description: 'Server rack maintenance required at downtown office.' },
+  { id: '2', title: 'Roadside Assistance', type: 'mechanical', color: '#FFA500', status: 'Active', distance: '3.5km', description: 'Vehicle breakdown on highway 4, requires towing.' },
+  { id: '3', title: 'Heavy Maintenance', type: 'heavy', color: '#FF4500', status: 'Pending', distance: '5.0km', description: 'Industrial AC unit malfunction, urgent repair.' },
+  { id: '4', title: 'Express Delivery', type: 'delivery', color: '#32CD32', status: 'Active', distance: '0.8km', description: 'Secure document transport to legal district.' },
+  { id: '5', title: 'Deep Cleaning', type: 'cleaning', color: '#9370DB', status: 'Completed', distance: '2.1km', description: 'Post-construction cleaning for new commercial space.' },
+];
+
+export default function MissionsScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'dark'];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <ThemedText type="title" style={styles.headerTitle}>MISSION LOG</ThemedText>
+        <ThemedText style={styles.headerSubtitle}>TACTICAL OVERVIEW</ThemedText>
+      </View>
+
+      <View style={[styles.filterBar, { borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.filterTab, styles.activeTab, { borderBottomColor: theme.tint }]}>
+          <ThemedText style={[styles.filterText, { color: theme.tint, fontWeight: '700' }]}>ALL</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.filterTab}>
+          <ThemedText style={styles.filterText}>ACTIVE</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.filterTab}>
+          <ThemedText style={styles.filterText}>COMPLETED</ThemedText>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.missionList} showsVerticalScrollIndicator={false}>
+        {ALL_MISSIONS.map(mission => (
+          <TouchableOpacity 
+            key={mission.id} 
+            style={[
+              styles.missionCard, 
+              { backgroundColor: theme.card, borderColor: theme.border },
+              mission.status === 'Completed' && { opacity: 0.6 }
+            ]}
+          >
+            <View style={[styles.missionColorIndicator, { backgroundColor: mission.color }]} />
+            <View style={styles.missionCardContent}>
+              <View style={styles.missionCardHeader}>
+                <ThemedText type="defaultSemiBold" style={styles.missionTitle}>{mission.title.toUpperCase()}</ThemedText>
+                <View style={[styles.statusBadge, { borderColor: mission.color }]}>
+                  <ThemedText style={[styles.statusText, { color: mission.color }]}>{mission.status.toUpperCase()}</ThemedText>
+                </View>
+              </View>
+              <ThemedText style={[styles.missionDescription, { color: theme.icon }]} numberOfLines={2}>
+                {mission.description}
+              </ThemedText>
+              <View style={styles.missionFooter}>
+                <View style={styles.footerItem}>
+                  <IconSymbol name="location.fill" size={12} color={theme.icon} />
+                  <ThemedText style={[styles.footerText, { color: theme.icon }]}>{mission.distance}</ThemedText>
+                </View>
+                <IconSymbol name="chevron.right" size={16} color={theme.icon} />
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
   },
-  titleContainer: {
+  header: {
+    padding: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    letterSpacing: 2,
+    opacity: 0.7,
+    marginTop: 4,
+  },
+  filterBar: {
     flexDirection: 'row',
-    gap: 8,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    marginBottom: 15,
+  },
+  filterTab: {
+    paddingVertical: 12,
+    marginRight: 24,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    // Style applied conditionally
+  },
+  filterText: {
+    fontSize: 12,
+    letterSpacing: 1,
+    fontWeight: '600',
+    opacity: 0.8,
+  },
+  missionList: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  missionCard: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  missionColorIndicator: {
+    width: 4,
+  },
+  missionCardContent: {
+    flex: 1,
+    padding: 16,
+  },
+  missionCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  missionTitle: {
+    fontSize: 14,
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  statusBadge: {
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  statusText: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  missionDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  missionFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(150,150,150,0.2)',
+    paddingTop: 12,
+  },
+  footerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  footerText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

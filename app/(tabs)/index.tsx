@@ -1,98 +1,200 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export default function HomeScreen() {
+const { width } = Dimensions.get('window');
+
+const MISSIONS = [
+  { id: '1', title: 'Electronics Repair', type: 'electronics', color: '#00BFFF', x: 20, y: 30, distance: '1.2km', description: 'Server rack maintenance required at downtown office.' },
+  { id: '2', title: 'Roadside Assistance', type: 'mechanical', color: '#FFA500', x: 60, y: 70, distance: '3.5km', description: 'Vehicle breakdown on highway 4, requires towing.' },
+  { id: '3', title: 'Heavy Maintenance', type: 'heavy', color: '#FF4500', x: 80, y: 20, distance: '5.0km', description: 'Industrial AC unit malfunction, urgent repair.' },
+  { id: '4', title: 'Express Delivery', type: 'delivery', color: '#32CD32', x: 40, y: 80, distance: '0.8km', description: 'Secure document transport to legal district.' },
+];
+
+export default function TacticalWarRoom() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'dark'];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <ThemedText type="title" style={styles.headerTitle}>TACTICAL WAR ROOM</ThemedText>
+        <ThemedText style={styles.headerSubtitle}>LIVE MISSION RADAR</ThemedText>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <View style={[styles.radarContainer, { borderColor: theme.border }]}>
+        <View style={styles.gridOverlay}>
+          {[...Array(6)].map((_, i) => (
+            <View key={`h-${i}`} style={[styles.gridLineHorizontal, { borderColor: theme.border, top: `${(i + 1) * 16.6}%` }]} />
+          ))}
+          {[...Array(6)].map((_, i) => (
+            <View key={`v-${i}`} style={[styles.gridLineVertical, { borderColor: theme.border, left: `${(i + 1) * 16.6}%` }]} />
+          ))}
+        </View>
+        
+        {MISSIONS.map(mission => (
+          <TouchableOpacity 
+            key={mission.id} 
+            style={[styles.beacon, { left: `${mission.x}%`, top: `${mission.y}%` }]}
+          >
+            <View style={[styles.beaconCore, { backgroundColor: mission.color }]} />
+            <View style={[styles.beaconPulse, { borderColor: mission.color }]} />
+          </TouchableOpacity>
+        ))}
+        
+        <View style={[styles.centerPoint, { backgroundColor: theme.tint }]} />
+      </View>
+
+      <View style={styles.listHeader}>
+        <ThemedText type="subtitle">ACTIVE MISSIONS</ThemedText>
+        <IconSymbol name="line.3.horizontal.decrease.circle" size={20} color={theme.icon} />
+      </View>
+
+      <ScrollView style={styles.missionList} showsVerticalScrollIndicator={false}>
+        {MISSIONS.map(mission => (
+          <TouchableOpacity 
+            key={mission.id} 
+            style={[styles.missionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+          >
+            <View style={[styles.missionColorIndicator, { backgroundColor: mission.color }]} />
+            <View style={styles.missionCardContent}>
+              <View style={styles.missionCardHeader}>
+                <ThemedText type="defaultSemiBold" style={styles.missionTitle}>{mission.title.toUpperCase()}</ThemedText>
+                <ThemedText style={styles.missionDistance}>{mission.distance}</ThemedText>
+              </View>
+              <ThemedText style={[styles.missionDescription, { color: theme.icon }]} numberOfLines={2}>
+                {mission.description}
+              </ThemedText>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    padding: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    letterSpacing: 2,
+    opacity: 0.7,
+    marginTop: 4,
+  },
+  radarContainer: {
+    height: width * 0.8,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderRadius: 8,
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: '#0A0A0A',
+  },
+  gridOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  gridLineHorizontal: {
     position: 'absolute',
+    width: '100%',
+    borderTopWidth: 1,
+    opacity: 0.2,
+  },
+  gridLineVertical: {
+    position: 'absolute',
+    height: '100%',
+    borderLeftWidth: 1,
+    opacity: 0.2,
+  },
+  centerPoint: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: 8,
+    height: 8,
+    marginLeft: -4,
+    marginTop: -4,
+    borderRadius: 4,
+  },
+  beacon: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    marginLeft: -12,
+    marginTop: -12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  beaconCore: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  beaconPulse: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    opacity: 0.5,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  missionList: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  missionCard: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  missionColorIndicator: {
+    width: 4,
+  },
+  missionCardContent: {
+    flex: 1,
+    padding: 16,
+  },
+  missionCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  missionTitle: {
+    fontSize: 14,
+    letterSpacing: 0.5,
+  },
+  missionDistance: {
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.8,
+  },
+  missionDescription: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });
