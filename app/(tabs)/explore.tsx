@@ -1,74 +1,159 @@
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
-import { ThemedText } from '@/components/themed-text';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../../hooks/useTheme';
+import {
+  Text,
+  TacticalHeader,
+  TacticalCard,
+  Badge,
+  BadgeColor,
+  SegmentedControl,
+  Divider,
+  Button,
+} from '../../components/ui';
 
-const ALL_MISSIONS = [
-  { id: '1', title: 'Electronics Repair', type: 'electronics', color: '#00BFFF', status: 'Active', distance: '1.2km', description: 'Server rack maintenance required at downtown office.' },
-  { id: '2', title: 'Roadside Assistance', type: 'mechanical', color: '#FFA500', status: 'Active', distance: '3.5km', description: 'Vehicle breakdown on highway 4, requires towing.' },
-  { id: '3', title: 'Heavy Maintenance', type: 'heavy', color: '#FF4500', status: 'Pending', distance: '5.0km', description: 'Industrial AC unit malfunction, urgent repair.' },
-  { id: '4', title: 'Express Delivery', type: 'delivery', color: '#32CD32', status: 'Active', distance: '0.8km', description: 'Secure document transport to legal district.' },
-  { id: '5', title: 'Deep Cleaning', type: 'cleaning', color: '#9370DB', status: 'Completed', distance: '2.1km', description: 'Post-construction cleaning for new commercial space.' },
+interface MissionLogItem {
+  id: string;
+  title: string;
+  category: string;
+  status: 'ACTIVE' | 'PENDING' | 'COMPLETED';
+  color: BadgeColor;
+  distance: string;
+  rewardIdr: string;
+  description: string;
+}
+
+const ALL_MISSIONS: MissionLogItem[] = [
+  {
+    id: 'm-201',
+    title: 'Commercial Server Maintenance',
+    category: 'ELECTRONICS',
+    status: 'ACTIVE',
+    color: 'cyan',
+    distance: '1.2 KM',
+    rewardIdr: 'Rp 450.000',
+    description: 'Server rack maintenance & cabling diagnostic at downtown commercial office.',
+  },
+  {
+    id: 'm-202',
+    title: 'Roadside Towing & Battery Boost',
+    category: 'MECHANICAL',
+    status: 'ACTIVE',
+    color: 'amber',
+    distance: '3.5 KM',
+    rewardIdr: 'Rp 650.000',
+    description: 'Vehicle breakdown on highway 4. Requires heavy towing & battery restart.',
+  },
+  {
+    id: 'm-203',
+    title: 'Industrial Chiller System Repair',
+    category: 'HEAVY HEATING',
+    status: 'PENDING',
+    color: 'crimson',
+    distance: '5.0 KM',
+    rewardIdr: 'Rp 1.200.000',
+    description: 'Urgent HVAC chiller overhaul at cold storage facility.',
+  },
+  {
+    id: 'm-204',
+    title: 'Post-Construction Deep Clean',
+    category: 'CLEANING',
+    status: 'COMPLETED',
+    color: 'emerald',
+    distance: '2.1 KM',
+    rewardIdr: 'Rp 800.000',
+    description: 'Full sanitization & trash removal for newly built commercial showroom.',
+  },
 ];
 
 export default function MissionsScreen() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'dark'];
+  const { colors } = useTheme();
+  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED'>('ALL');
+
+  const filteredMissions = ALL_MISSIONS.filter((m) => {
+    if (filter === 'ALL') return true;
+    if (filter === 'ACTIVE') return m.status === 'ACTIVE' || m.status === 'PENDING';
+    if (filter === 'COMPLETED') return m.status === 'COMPLETED';
+    return true;
+  });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
-        <ThemedText type="title" style={styles.headerTitle}>MISSION LOG</ThemedText>
-        <ThemedText style={styles.headerSubtitle}>TACTICAL OVERVIEW</ThemedText>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      <TacticalHeader showRoleSwitcher={false} />
 
-      <View style={[styles.filterBar, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.filterTab, styles.activeTab, { borderBottomColor: theme.tint }]}>
-          <ThemedText style={[styles.filterText, { color: theme.tint, fontWeight: '700' }]}>ALL</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterTab}>
-          <ThemedText style={styles.filterText}>ACTIVE</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterTab}>
-          <ThemedText style={styles.filterText}>COMPLETED</ThemedText>
-        </TouchableOpacity>
-      </View>
+      <View style={styles.content}>
+        <View style={styles.headerTitleRow}>
+          <View>
+            <Text variant="h2">MISSION LOG</Text>
+            <Text variant="caption" color={colors.textSecondary}>
+              TACTICAL SERVICE CONTRACTS & DISPATCH HISTORY
+            </Text>
+          </View>
+        </View>
 
-      <ScrollView style={styles.missionList} showsVerticalScrollIndicator={false}>
-        {ALL_MISSIONS.map(mission => (
-          <TouchableOpacity 
-            key={mission.id} 
-            style={[
-              styles.missionCard, 
-              { backgroundColor: theme.card, borderColor: theme.border },
-              mission.status === 'Completed' && { opacity: 0.6 }
-            ]}
-          >
-            <View style={[styles.missionColorIndicator, { backgroundColor: mission.color }]} />
-            <View style={styles.missionCardContent}>
-              <View style={styles.missionCardHeader}>
-                <ThemedText type="defaultSemiBold" style={styles.missionTitle}>{mission.title.toUpperCase()}</ThemedText>
-                <View style={[styles.statusBadge, { borderColor: mission.color }]}>
-                  <ThemedText style={[styles.statusText, { color: mission.color }]}>{mission.status.toUpperCase()}</ThemedText>
-                </View>
+        {/* Filter Switcher */}
+        <SegmentedControl
+          options={[
+            { value: 'ALL', label: 'ALL LOGS' },
+            { value: 'ACTIVE', label: 'ACTIVE' },
+            { value: 'COMPLETED', label: 'COMPLETED' },
+          ]}
+          selectedValue={filter}
+          onSelect={(val) => setFilter(val as any)}
+          style={{ marginVertical: 12 }}
+        />
+
+        <Divider label={`// DISPLAYING ${filteredMissions.length} CONTRACTS`} />
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
+          {filteredMissions.map((mission) => (
+            <TacticalCard
+              key={mission.id}
+              accent={mission.color}
+              style={styles.card}
+              elevated={mission.status === 'ACTIVE'}
+            >
+              <View style={styles.cardHeader}>
+                <Badge
+                  label={mission.status}
+                  color={mission.color}
+                  variant="status"
+                />
+                <Text variant="mono" weight="bold" color={colors[mission.color as keyof typeof colors]}>
+                  {mission.rewardIdr}
+                </Text>
               </View>
-              <ThemedText style={[styles.missionDescription, { color: theme.icon }]} numberOfLines={2}>
+
+              <Text variant="h3" style={styles.title}>
+                {mission.title}
+              </Text>
+
+              <Text variant="bodySecondary" numberOfLines={2} style={styles.desc}>
                 {mission.description}
-              </ThemedText>
-              <View style={styles.missionFooter}>
-                <View style={styles.footerItem}>
-                  <IconSymbol name="location.fill" size={12} color={theme.icon} />
-                  <ThemedText style={[styles.footerText, { color: theme.icon }]}>{mission.distance}</ThemedText>
+              </Text>
+
+              <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+                <View style={styles.footerInfo}>
+                  <Ionicons name="navigate-outline" size={14} color={colors.textSecondary} />
+                  <Text variant="caption" color={colors.textSecondary} style={{ marginLeft: 4 }}>
+                    {mission.distance} • {mission.category}
+                  </Text>
                 </View>
-                <IconSymbol name="chevron.right" size={16} color={theme.icon} />
+
+                <Button
+                  title="DETAILS"
+                  variant="ghost"
+                  size="sm"
+                  rightIcon={<Ionicons name="chevron-forward" size={14} color={colors.primary} />}
+                />
               </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            </TacticalCard>
+          ))}
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -77,104 +162,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-    paddingBottom: 15,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    letterSpacing: 2,
-    opacity: 0.7,
-    marginTop: 4,
-  },
-  filterBar: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    marginBottom: 15,
-  },
-  filterTab: {
-    paddingVertical: 12,
-    marginRight: 24,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTab: {
-    // Style applied conditionally
-  },
-  filterText: {
-    fontSize: 12,
-    letterSpacing: 1,
-    fontWeight: '600',
-    opacity: 0.8,
-  },
-  missionList: {
+  content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
-  missionCard: {
+  headerTitleRow: {
     flexDirection: 'row',
-    borderRadius: 8,
-    borderWidth: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  listContent: {
+    paddingBottom: 24,
+  },
+  card: {
     marginBottom: 12,
-    overflow: 'hidden',
   },
-  missionColorIndicator: {
-    width: 4,
-  },
-  missionCardContent: {
-    flex: 1,
-    padding: 16,
-  },
-  missionCardHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  missionTitle: {
-    fontSize: 14,
-    letterSpacing: 0.5,
-    flex: 1,
+  title: {
+    fontSize: 16,
+    marginBottom: 6,
   },
-  statusBadge: {
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  statusText: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  missionDescription: {
-    fontSize: 13,
-    lineHeight: 18,
+  desc: {
     marginBottom: 12,
   },
-  missionFooter: {
+  cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(150,150,150,0.2)',
-    paddingTop: 12,
+    borderTopWidth: 1,
+    paddingTop: 8,
   },
-  footerItem: {
+  footerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  footerText: {
-    fontSize: 12,
-    fontWeight: '500',
   },
 });

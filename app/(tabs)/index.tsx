@@ -1,76 +1,256 @@
-import { StyleSheet, View, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
-import { ThemedText } from '@/components/themed-text';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '../../hooks/useTheme';
+import { useAppState } from '../../context/AppStateContext';
+import {
+  Text,
+  TacticalHeader,
+  StatTile,
+  TacticalCard,
+  Badge,
+  Button,
+  ProgressBar,
+  Divider,
+} from '../../components/ui';
 
 const { width } = Dimensions.get('window');
 
-const MISSIONS = [
-  { id: '1', title: 'Electronics Repair', type: 'electronics', color: '#00BFFF', x: 20, y: 30, distance: '1.2km', description: 'Server rack maintenance required at downtown office.' },
-  { id: '2', title: 'Roadside Assistance', type: 'mechanical', color: '#FFA500', x: 60, y: 70, distance: '3.5km', description: 'Vehicle breakdown on highway 4, requires towing.' },
-  { id: '3', title: 'Heavy Maintenance', type: 'heavy', color: '#FF4500', x: 80, y: 20, distance: '5.0km', description: 'Industrial AC unit malfunction, urgent repair.' },
-  { id: '4', title: 'Express Delivery', type: 'delivery', color: '#32CD32', x: 40, y: 80, distance: '0.8km', description: 'Secure document transport to legal district.' },
+const MOCK_BEACONS = [
+  {
+    id: 'm-101',
+    title: 'Commercial Server Maintenance',
+    category: 'electronics',
+    accent: 'cyan' as const,
+    distance: '1.2 KM',
+    location: 'CBD Commercial Tower B',
+    rewardIdr: 'Rp 450.000',
+    rewardCoins: 120,
+    urgentLevel: 'HIGH',
+    x: 28,
+    y: 35,
+  },
+  {
+    id: 'm-102',
+    title: 'Emergency Highway Towing',
+    category: 'mechanical',
+    accent: 'amber' as const,
+    distance: '3.5 KM',
+    location: 'Bypass Highway KM 14',
+    rewardIdr: 'Rp 650.000',
+    rewardCoins: 180,
+    urgentLevel: 'HIGH',
+    x: 68,
+    y: 65,
+  },
+  {
+    id: 'm-103',
+    title: 'Industrial Chiller Overhaul',
+    category: 'heavy',
+    accent: 'crimson' as const,
+    distance: '5.0 KM',
+    location: 'South Industrial Logistics Hub',
+    rewardIdr: 'Rp 1.200.000',
+    rewardCoins: 350,
+    urgentLevel: 'CRITICAL',
+    x: 82,
+    y: 22,
+  },
+  {
+    id: 'm-104',
+    title: 'Encrypted Document Escort',
+    category: 'delivery',
+    accent: 'emerald' as const,
+    distance: '0.8 KM',
+    location: 'District Financial Center',
+    rewardIdr: 'Rp 250.000',
+    rewardCoins: 80,
+    urgentLevel: 'NORMAL',
+    x: 42,
+    y: 78,
+  },
 ];
 
-export default function TacticalWarRoom() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'dark'];
+export default function TacticalWarRoomScreen() {
+  const { colors } = useTheme();
+  const { user, role, triggerEmergency } = useAppState();
+
+  const handleEmergencyPress = () => {
+    triggerEmergency({
+      id: 'gb-999',
+      title: 'CRITICAL NETWORK SYSTEM FAILURE',
+      category: 'network',
+      description: 'Corporate server array offline right before executive presentation.',
+      location: 'Enterprise Plaza Level 18',
+      flatFee: 1500000,
+      timeRemainingSeconds: 300,
+      citizenName: 'Starlight Corp Admin',
+      urgentLevel: 'CRITICAL',
+    });
+  };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
-        <ThemedText type="title" style={styles.headerTitle}>TACTICAL WAR ROOM</ThemedText>
-        <ThemedText style={styles.headerSubtitle}>LIVE MISSION RADAR</ThemedText>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      {/* HUD Header */}
+      <TacticalHeader />
 
-      <View style={[styles.radarContainer, { borderColor: theme.border }]}>
-        <View style={styles.gridOverlay}>
-          {[...Array(6)].map((_, i) => (
-            <View key={`h-${i}`} style={[styles.gridLineHorizontal, { borderColor: theme.border, top: `${(i + 1) * 16.6}%` }]} />
-          ))}
-          {[...Array(6)].map((_, i) => (
-            <View key={`v-${i}`} style={[styles.gridLineVertical, { borderColor: theme.border, left: `${(i + 1) * 16.6}%` }]} />
-          ))}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* User Telemetry & RPG Progression Bar */}
+        <View style={styles.telemetrySection}>
+          <ProgressBar
+            progress={user.xp / user.nextLevelXp}
+            label={`RANK PROGRESS // LEVEL ${user.level}`}
+            valueText={`${user.xp.toLocaleString()} / ${user.nextLevelXp.toLocaleString()} XP`}
+            color={colors.primary}
+            height={6}
+          />
+
+          {/* Key Metric Tiles */}
+          <View style={styles.statsGrid}>
+            <StatTile
+              label="ESCROW VAULT"
+              value={`Rp ${(user.escrowBalance / 1000).toFixed(0)}k`}
+              subValue="Secured Funds"
+              accentColor={colors.emerald}
+              icon={<Ionicons name="lock-closed-outline" size={16} color={colors.emerald} />}
+            />
+            <StatTile
+              label="HERO COINS"
+              value={user.heroCoins}
+              subValue="Reward Token"
+              accentColor={colors.amber}
+              icon={<Ionicons name="shield-outline" size={16} color={colors.amber} />}
+            />
+            <StatTile
+              label="RATING / MISSIONS"
+              value={`${user.rating}★`}
+              subValue={`${user.completedMissions} Done`}
+              accentColor={colors.primary}
+              icon={<Ionicons name="star-outline" size={16} color={colors.primary} />}
+            />
+          </View>
         </View>
-        
-        {MISSIONS.map(mission => (
-          <TouchableOpacity 
-            key={mission.id} 
-            style={[styles.beacon, { left: `${mission.x}%`, top: `${mission.y}%` }]}
-          >
-            <View style={[styles.beaconCore, { backgroundColor: mission.color }]} />
-            <View style={[styles.beaconPulse, { borderColor: mission.color }]} />
-          </TouchableOpacity>
-        ))}
-        
-        <View style={[styles.centerPoint, { backgroundColor: theme.tint }]} />
-      </View>
 
-      <View style={styles.listHeader}>
-        <ThemedText type="subtitle">ACTIVE MISSIONS</ThemedText>
-        <IconSymbol name="line.3.horizontal.decrease.circle" size={20} color={theme.icon} />
-      </View>
+        <Divider label="// LIVE BEACON RADAR MAP" />
 
-      <ScrollView style={styles.missionList} showsVerticalScrollIndicator={false}>
-        {MISSIONS.map(mission => (
-          <TouchableOpacity 
-            key={mission.id} 
-            style={[styles.missionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
-            <View style={[styles.missionColorIndicator, { backgroundColor: mission.color }]} />
-            <View style={styles.missionCardContent}>
-              <View style={styles.missionCardHeader}>
-                <ThemedText type="defaultSemiBold" style={styles.missionTitle}>{mission.title.toUpperCase()}</ThemedText>
-                <ThemedText style={styles.missionDistance}>{mission.distance}</ThemedText>
-              </View>
-              <ThemedText style={[styles.missionDescription, { color: theme.icon }]} numberOfLines={2}>
-                {mission.description}
-              </ThemedText>
+        {/* Tactical Radar Display Container */}
+        <View style={[styles.radarBox, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          {/* Grid Telemetry Overlay */}
+          <View style={styles.gridOverlay}>
+            {[...Array(5)].map((_, i) => (
+              <View
+                key={`h-${i}`}
+                style={[
+                  styles.gridHorizontal,
+                  { borderColor: colors.border, top: `${(i + 1) * 20}%` },
+                ]}
+              />
+            ))}
+            {[...Array(5)].map((_, i) => (
+              <View
+                key={`v-${i}`}
+                style={[
+                  styles.gridVertical,
+                  { borderColor: colors.border, left: `${(i + 1) * 20}%` },
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* Center User Node */}
+          <View style={[styles.centerNode, { backgroundColor: colors.primary, borderColor: colors.background }]} />
+
+          {/* Interactive Mission Beacons */}
+          {MOCK_BEACONS.map((beacon) => (
+            <View
+              key={beacon.id}
+              style={[
+                styles.beaconMarker,
+                { left: `${beacon.x}%`, top: `${beacon.y}%` },
+              ]}
+            >
+              <View style={[styles.beaconDot, { backgroundColor: colors[beacon.accent as keyof typeof colors] }]} />
+              <View style={[styles.beaconRing, { borderColor: colors[beacon.accent as keyof typeof colors] }]} />
             </View>
-          </TouchableOpacity>
+          ))}
+
+          {/* Corner HUD Telemetry Markers */}
+          <View style={styles.radarHudTL}>
+            <Text variant="mono" style={styles.hudText}>RADAR: SCANNING (10KM)</Text>
+          </View>
+          <View style={styles.radarHudTR}>
+            <Text variant="mono" style={styles.hudText}>BEACONS: {MOCK_BEACONS.length}</Text>
+          </View>
+        </View>
+
+        {/* Emergency Dispatch Gate Break Protocol Trigger */}
+        <View style={styles.emergencyBannerSection}>
+          <TacticalCard accent="crimson" elevated>
+            <View style={styles.emergencyCardContent}>
+              <View style={styles.emergencyHeader}>
+                <Ionicons name="warning-outline" size={20} color={colors.crimson} />
+                <Text variant="h3" color={colors.crimson} style={styles.emergencyTitle}>
+                  GATE BREAK PROTOCOL
+                </Text>
+              </View>
+              <Text variant="bodySecondary" style={styles.emergencySub}>
+                Instant high-priority emergency dispatch for critical system & infrastructure outages.
+              </Text>
+              <Button
+                title="TRIGGER GATE BREAK PROTOCOL"
+                variant="emergency"
+                size="md"
+                leftIcon={<Ionicons name="flash-outline" size={18} color="#FFF" />}
+                onPress={handleEmergencyPress}
+                style={{ marginTop: 12 }}
+              />
+            </View>
+          </TacticalCard>
+        </View>
+
+        <Divider label="// ACTIVE BEACON REQUESTS" />
+
+        {/* Beacon Request Cards */}
+        {MOCK_BEACONS.map((b) => (
+          <TacticalCard
+            key={b.id}
+            accent={b.accent}
+            style={styles.beaconCard}
+          >
+            <View style={styles.beaconCardHeader}>
+              <Badge
+                label={b.category.toUpperCase()}
+                color={b.accent}
+                variant="status"
+              />
+              <Text variant="mono" weight="bold" color={colors[b.accent as keyof typeof colors]}>
+                {b.rewardIdr} + {b.rewardCoins} HC
+              </Text>
+            </View>
+
+            <Text variant="h3" style={styles.cardTitle}>
+              {b.title}
+            </Text>
+
+            <View style={styles.beaconLocationRow}>
+              <Ionicons name="location-outline" size={14} color={colors.textSecondary} />
+              <Text variant="caption" color={colors.textSecondary} style={{ marginLeft: 4 }}>
+                {b.location} ({b.distance})
+              </Text>
+            </View>
+
+            <View style={styles.cardFooter}>
+              <Button
+                title={role === 'hero' ? 'SWIPE TO ACCEPT MISSION' : 'VIEW MISSION DETAILS'}
+                variant={role === 'hero' ? 'primary' : 'secondary'}
+                size="sm"
+                rightIcon={<Ionicons name="arrow-forward-outline" size={14} color={role === 'hero' ? colors.textInverse : colors.textPrimary} />}
+                fullWidth
+              />
+            </View>
+          </TacticalCard>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -81,120 +261,123 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-    paddingBottom: 15,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: 1.5,
+  telemetrySection: {
+    marginTop: 12,
   },
-  headerSubtitle: {
-    fontSize: 12,
-    letterSpacing: 2,
-    opacity: 0.7,
-    marginTop: 4,
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
   },
-  radarContainer: {
-    height: width * 0.8,
-    marginHorizontal: 20,
-    borderWidth: 1,
+  radarBox: {
+    height: width * 0.72,
+    width: '100%',
     borderRadius: 8,
+    borderWidth: 1,
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: '#0A0A0A',
   },
   gridOverlay: {
     ...StyleSheet.absoluteFillObject,
   },
-  gridLineHorizontal: {
+  gridHorizontal: {
     position: 'absolute',
     width: '100%',
     borderTopWidth: 1,
-    opacity: 0.2,
+    opacity: 0.15,
   },
-  gridLineVertical: {
+  gridVertical: {
     position: 'absolute',
     height: '100%',
     borderLeftWidth: 1,
-    opacity: 0.2,
+    opacity: 0.15,
   },
-  centerPoint: {
+  centerNode: {
     position: 'absolute',
     left: '50%',
     top: '50%',
-    width: 8,
-    height: 8,
-    marginLeft: -4,
-    marginTop: -4,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    marginLeft: -5,
+    marginTop: -5,
+    borderRadius: 5,
+    borderWidth: 2,
   },
-  beacon: {
+  beaconMarker: {
     position: 'absolute',
-    width: 24,
-    height: 24,
-    marginLeft: -12,
-    marginTop: -12,
+    width: 20,
+    height: 20,
+    marginLeft: -10,
+    marginTop: -10,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  beaconCore: {
+  beaconDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  beaconPulse: {
+  beaconRing: {
     position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 1,
-    opacity: 0.5,
+    opacity: 0.6,
   },
-  listHeader: {
+  radarHudTL: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+  },
+  radarHudTR: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  hudText: {
+    fontSize: 9,
+  },
+  emergencyBannerSection: {
+    marginTop: 16,
+  },
+  emergencyCardContent: {
+    gap: 4,
+  },
+  emergencyHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    gap: 8,
   },
-  missionList: {
-    flex: 1,
-    paddingHorizontal: 20,
+  emergencyTitle: {
+    letterSpacing: 0.8,
   },
-  missionCard: {
-    flexDirection: 'row',
-    borderRadius: 8,
-    borderWidth: 1,
+  emergencySub: {
+    marginTop: 4,
+  },
+  beaconCard: {
     marginBottom: 12,
-    overflow: 'hidden',
   },
-  missionColorIndicator: {
-    width: 4,
-  },
-  missionCardContent: {
-    flex: 1,
-    padding: 16,
-  },
-  missionCardHeader: {
+  beaconCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 16,
     marginBottom: 6,
   },
-  missionTitle: {
-    fontSize: 14,
-    letterSpacing: 0.5,
+  beaconLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  missionDistance: {
-    fontSize: 12,
-    fontWeight: '600',
-    opacity: 0.8,
-  },
-  missionDescription: {
-    fontSize: 13,
-    lineHeight: 18,
+  cardFooter: {
+    marginTop: 4,
   },
 });
