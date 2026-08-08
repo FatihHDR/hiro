@@ -40,6 +40,8 @@ function RootLayoutContent() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen name="kyc-verification" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Tactical Specs' }} />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />

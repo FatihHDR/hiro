@@ -3,13 +3,24 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 export type UserRole = 'citizen' | 'hero';
 export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'elite';
 
+export interface KycSubmission {
+  ktpNumber: string;
+  fullName: string;
+  skills: string[];
+  certificateUrl?: string;
+  submittedAt: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   callsign: string;
+  email: string;
   role: UserRole;
   avatarUrl?: string;
+  bio?: string;
   verificationStatus: VerificationStatus;
+  kycDetails?: KycSubmission;
   level: number;
   xp: number;
   nextLevelXp: number;
@@ -18,6 +29,7 @@ export interface UserProfile {
   escrowBalance: number; // in IDR
   rating: number;
   completedMissions: number;
+  skills: string[];
   mentorInfo: {
     isMentor: boolean;
     sidekickCount: number;
@@ -41,7 +53,14 @@ export interface GateBreakAlert {
 interface AppStateContextType {
   user: UserProfile;
   role: UserRole;
+  isAuthenticated: boolean;
+  login: (email: string, role: UserRole) => void;
+  register: (name: string, callsign: string, email: string, role: UserRole) => void;
+  logout: () => void;
   switchRole: (role: UserRole) => void;
+  updateUserProfile: (data: Partial<UserProfile>) => void;
+  submitKyc: (kycData: KycSubmission) => void;
+  approveKycSimulation: () => void;
   activeEmergency: GateBreakAlert | null;
   triggerEmergency: (alert: GateBreakAlert) => void;
   clearEmergency: () => void;
@@ -57,7 +76,9 @@ const initialUserProfile: UserProfile = {
   id: 'usr_007',
   name: 'Alex Vance',
   callsign: 'SPECTRE-07',
+  email: 'alex.vance@hiro.tech',
   role: 'hero',
+  bio: 'Certified Commercial HVAC & Cybersecurity Tactical Specialist. 5+ years field experience.',
   verificationStatus: 'verified',
   level: 14,
   xp: 3450,
@@ -67,6 +88,7 @@ const initialUserProfile: UserProfile = {
   escrowBalance: 2450000,
   rating: 4.9,
   completedMissions: 48,
+  skills: ['HVAC Repair', 'Server Maintenance', 'Roadside Towing', 'Network Security'],
   mentorInfo: {
     isMentor: true,
     sidekickCount: 1,
@@ -79,13 +101,78 @@ const AppStateContext = createContext<AppStateContextType | undefined>(undefined
 
 export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(initialUserProfile);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
   const [activeEmergency, setActiveEmergency] = useState<GateBreakAlert | null>(null);
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
+
+  const login = (email: string, chosenRole: UserRole) => {
+    setIsAuthenticated(true);
+    setUser((prev) => ({
+      ...prev,
+      email,
+      role: chosenRole,
+    }));
+  };
+
+  const register = (name: string, callsign: string, email: string, chosenRole: UserRole) => {
+    setIsAuthenticated(true);
+    setUser({
+      id: `usr_${Date.now().toString().slice(-4)}`,
+      name,
+      callsign: callsign.toUpperCase(),
+      email,
+      role: chosenRole,
+      bio: 'Newly registered tactical operator.',
+      verificationStatus: 'unverified',
+      level: 1,
+      xp: 0,
+      nextLevelXp: 1000,
+      rankTitle: chosenRole === 'hero' ? 'Apprentice Specialist' : 'Citizen Client',
+      heroCoins: 100,
+      escrowBalance: 0,
+      rating: 5.0,
+      completedMissions: 0,
+      skills: [],
+      mentorInfo: {
+        isMentor: false,
+        sidekickCount: 0,
+        maxSidekicks: 2,
+        passiveXpEarned: 0,
+      },
+    });
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+  };
 
   const switchRole = (newRole: UserRole) => {
     setUser((prev) => ({
       ...prev,
       role: newRole,
+    }));
+  };
+
+  const updateUserProfile = (data: Partial<UserProfile>) => {
+    setUser((prev) => ({
+      ...prev,
+      ...data,
+    }));
+  };
+
+  const submitKyc = (kycData: KycSubmission) => {
+    setUser((prev) => ({
+      ...prev,
+      verificationStatus: 'pending',
+      kycDetails: kycData,
+      skills: kycData.skills,
+    }));
+  };
+
+  const approveKycSimulation = () => {
+    setUser((prev) => ({
+      ...prev,
+      verificationStatus: 'verified',
     }));
   };
 
@@ -143,7 +230,14 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
       value={{
         user,
         role: user.role,
+        isAuthenticated,
+        login,
+        register,
+        logout,
         switchRole,
+        updateUserProfile,
+        submitKyc,
+        approveKycSimulation,
         activeEmergency,
         triggerEmergency,
         clearEmergency,
