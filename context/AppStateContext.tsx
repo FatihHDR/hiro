@@ -11,6 +11,37 @@ export interface KycSubmission {
   submittedAt: string;
 }
 
+export interface SidekickMission {
+  id: string;
+  title: string;
+  category: string;
+  location: string;
+  status: 'IN_PROGRESS' | 'COMPLETED';
+  xpReward: number;
+  timeRemaining: string;
+}
+
+export interface SidekickProfile {
+  id: string;
+  name: string;
+  callsign: string;
+  level: number;
+  specialty: string;
+  avatarUrl?: string;
+  activeMission?: SidekickMission;
+  completedMissions: number;
+  passiveXpContributed: number;
+  status: 'ONLINE_IN_FIELD' | 'STANDBY' | 'MISSION_COMPLETE';
+}
+
+export interface MentorshipMessage {
+  id: string;
+  sidekickId: string;
+  sender: 'mentor' | 'sidekick';
+  text: string;
+  timestamp: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -32,12 +63,26 @@ export interface UserProfile {
   skills: string[];
   unlockedSkillNodeIds: string[];
   skillPoints: number;
+  purchasedShopItemIds: string[];
   mentorInfo: {
     isMentor: boolean;
-    sidekickCount: number;
+    sidekicks: SidekickProfile[];
     maxSidekicks: number;
     passiveXpEarned: number;
+    passiveXpPercentage: number;
   };
+}
+
+export interface EscrowTransaction {
+  id: string;
+  missionTitle: string;
+  category: string;
+  amountIdr: number;
+  citizenName: string;
+  heroCallsign: string;
+  status: 'HELD_IN_VAULT' | 'RELEASED_TO_HERO' | 'REFUNDED';
+  paymentMethod: string;
+  timestamp: string;
 }
 
 export interface GateBreakAlert {
@@ -73,7 +118,62 @@ interface AppStateContextType {
   activeMissionId: string | null;
   setActiveMissionId: (id: string | null) => void;
   unlockSkillNode: (nodeId: string, xpCost: number, newSkillName: string) => boolean;
+  escrowTransactions: EscrowTransaction[];
+  createEscrowDeposit: (tx: Omit<EscrowTransaction, 'id' | 'timestamp' | 'status'>) => void;
+  confirmAndReleaseEscrow: (transactionId: string) => void;
+  redeemShopItem: (itemId: string, coinPrice: number) => boolean;
+  mentorshipMessages: MentorshipMessage[];
+  sendMentorshipMessage: (sidekickId: string, text: string) => void;
+  simulateSidekickMissionComplete: (sidekickId: string) => { sidekickXp: number; passiveMentorXp: number } | null;
+  recruitSidekick: (sidekick: SidekickProfile) => boolean;
+  dismissSidekick: (sidekickId: string) => void;
 }
+
+const INITIAL_SIDEKICKS: SidekickProfile[] = [
+  {
+    id: 'sk_01',
+    name: 'Rian Pratama',
+    callsign: 'NOVA-03',
+    level: 4,
+    specialty: 'Apprentice HVAC Technician',
+    status: 'ONLINE_IN_FIELD',
+    completedMissions: 12,
+    passiveXpContributed: 450,
+    activeMission: {
+      id: 'm-sk-01',
+      title: 'Residential Split AC Freon Leak & Low Suction',
+      category: 'ELECTRONICS',
+      location: 'Kemang Pratama Blok C',
+      status: 'IN_PROGRESS',
+      xpReward: 600,
+      timeRemaining: '18:40 mins',
+    },
+  },
+];
+
+const INITIAL_MENTORSHIP_MESSAGES: MentorshipMessage[] = [
+  {
+    id: 'msg_01',
+    sidekickId: 'sk_01',
+    sender: 'sidekick',
+    text: 'Halo Mentor SPECTRE-07! Tekanan manifold gauge R32 terbaca cuma 65 PSI dan pipa discharge mulai berembun es. Apakah perlu langsung flashing oli atau cukup top-up freon?',
+    timestamp: '14:22',
+  },
+  {
+    id: 'msg_02',
+    sidekickId: 'sk_01',
+    sender: 'mentor',
+    text: 'Periksa dulu sambungan flare nut di outdoor unit dengan air sabun. Jika ada gelembung halus, kencangkan torsi flare nut dulu sebelum isi freon sampai 130 PSI pada ampere kompresor normal.',
+    timestamp: '14:24',
+  },
+  {
+    id: 'msg_03',
+    sidekickId: 'sk_01',
+    sender: 'sidekick',
+    text: 'Siap Mentor! Ditemukan kebocoran mikro di flare nut suction. Sedang dikencangkan ulang sekarang.',
+    timestamp: '14:26',
+  },
+];
 
 const initialUserProfile: UserProfile = {
   id: 'usr_007',
@@ -94,13 +194,62 @@ const initialUserProfile: UserProfile = {
   skills: ['HVAC Repair', 'Server Maintenance', 'Roadside Towing', 'Network Security'],
   unlockedSkillNodeIds: ['hvac_1', 'cyber_1', 'mech_1', 'hvac_2', 'cyber_2'],
   skillPoints: 3,
+  purchasedShopItemIds: ['benefit_bpjs'],
   mentorInfo: {
     isMentor: true,
-    sidekickCount: 1,
+    sidekicks: INITIAL_SIDEKICKS,
     maxSidekicks: 2,
     passiveXpEarned: 450,
+    passiveXpPercentage: 15,
   },
 };
+
+const INITIAL_ESCROW_TRANSACTIONS: EscrowTransaction[] = [
+  {
+    id: 'tx_escrow_101',
+    missionTitle: 'Commercial Server Maintenance',
+    category: 'ELECTRONICS',
+    amountIdr: 450000,
+    citizenName: 'Starlight Media Admin',
+    heroCallsign: 'SPECTRE-07',
+    status: 'HELD_IN_VAULT',
+    paymentMethod: 'BCA Virtual Account',
+    timestamp: 'Baru saja (Locked)',
+  },
+  {
+    id: 'tx_escrow_102',
+    missionTitle: 'Emergency Highway Towing',
+    category: 'MECHANICAL',
+    amountIdr: 650000,
+    citizenName: 'Budi Santoso',
+    heroCallsign: 'SPECTRE-07',
+    status: 'HELD_IN_VAULT',
+    paymentMethod: 'GoPay / QRIS',
+    timestamp: '15 menit yang lalu',
+  },
+  {
+    id: 'tx_escrow_103',
+    missionTitle: 'Industrial Chiller System Repair',
+    category: 'HEAVY HVAC',
+    amountIdr: 1200000,
+    citizenName: 'ColdChain Logistics Ltd',
+    heroCallsign: 'SPECTRE-07',
+    status: 'HELD_IN_VAULT',
+    paymentMethod: 'Mandiri VA',
+    timestamp: '1 jam yang lalu',
+  },
+  {
+    id: 'tx_escrow_099',
+    missionTitle: 'Post-Construction Deep Clean',
+    category: 'CLEANING',
+    amountIdr: 800000,
+    citizenName: 'Mega Properti Indonesia',
+    heroCallsign: 'SPECTRE-07',
+    status: 'RELEASED_TO_HERO',
+    paymentMethod: 'BCA Virtual Account',
+    timestamp: 'Kemarin (Sukses Selesai)',
+  },
+];
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
@@ -109,6 +258,7 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
   const [activeEmergency, setActiveEmergency] = useState<GateBreakAlert | null>(null);
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
+  const [escrowTransactions, setEscrowTransactions] = useState<EscrowTransaction[]>(INITIAL_ESCROW_TRANSACTIONS);
 
   const login = (email: string, chosenRole: UserRole) => {
     setIsAuthenticated(true);
@@ -140,11 +290,13 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
       skills: [],
       unlockedSkillNodeIds: ['hvac_1', 'cyber_1', 'mech_1'],
       skillPoints: 1,
+      purchasedShopItemIds: [],
       mentorInfo: {
         isMentor: false,
-        sidekickCount: 0,
+        sidekicks: [],
         maxSidekicks: 2,
         passiveXpEarned: 0,
+        passiveXpPercentage: 15,
       },
     });
   };
@@ -260,6 +412,127 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     }));
   };
 
+  const createEscrowDeposit = (tx: Omit<EscrowTransaction, 'id' | 'timestamp' | 'status'>) => {
+    const newTx: EscrowTransaction = {
+      ...tx,
+      id: `tx_${Date.now()}`,
+      status: 'HELD_IN_VAULT',
+      timestamp: 'Baru saja (Locked)',
+    };
+    setEscrowTransactions((prev) => [newTx, ...prev]);
+    depositEscrow(tx.amountIdr);
+  };
+
+  const confirmAndReleaseEscrow = (transactionId: string) => {
+    setEscrowTransactions((prev) =>
+      prev.map((tx) => {
+        if (tx.id === transactionId && tx.status === 'HELD_IN_VAULT') {
+          releaseEscrow(tx.amountIdr);
+          return {
+            ...tx,
+            status: 'RELEASED_TO_HERO',
+            timestamp: 'Dikonfirmasi Selesai (Dana Diteruskan)',
+          };
+        }
+        return tx;
+      })
+    );
+  };
+
+  const redeemShopItem = (itemId: string, coinPrice: number): boolean => {
+    if (user.purchasedShopItemIds.includes(itemId)) {
+      return true;
+    }
+
+    if (user.heroCoins < coinPrice) {
+      return false;
+    }
+
+    setUser((prev) => ({
+      ...prev,
+      heroCoins: prev.heroCoins - coinPrice,
+      purchasedShopItemIds: [...prev.purchasedShopItemIds, itemId],
+    }));
+
+    return true;
+  };
+
+  const [mentorshipMessages, setMentorshipMessages] = useState<MentorshipMessage[]>(INITIAL_MENTORSHIP_MESSAGES);
+
+  const sendMentorshipMessage = (sidekickId: string, text: string) => {
+    const newMsg: MentorshipMessage = {
+      id: `msg_${Date.now()}`,
+      sidekickId,
+      sender: 'mentor',
+      text,
+      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    };
+    setMentorshipMessages((prev) => [...prev, newMsg]);
+  };
+
+  const simulateSidekickMissionComplete = (sidekickId: string): { sidekickXp: number; passiveMentorXp: number } | null => {
+    const targetSidekick = user.mentorInfo.sidekicks.find((sk) => sk.id === sidekickId);
+    if (!targetSidekick || !targetSidekick.activeMission) return null;
+
+    const missionXp = targetSidekick.activeMission.xpReward;
+    const passiveMentorXp = Math.round(missionXp * (user.mentorInfo.passiveXpPercentage / 100));
+
+    // Award passive XP to mentor
+    addXp(passiveMentorXp);
+
+    // Update sidekick state
+    setUser((prev) => ({
+      ...prev,
+      mentorInfo: {
+        ...prev.mentorInfo,
+        passiveXpEarned: prev.mentorInfo.passiveXpEarned + passiveMentorXp,
+        sidekicks: prev.mentorInfo.sidekicks.map((sk) => {
+          if (sk.id === sidekickId) {
+            return {
+              ...sk,
+              completedMissions: sk.completedMissions + 1,
+              passiveXpContributed: sk.passiveXpContributed + passiveMentorXp,
+              status: 'STANDBY',
+              activeMission: undefined,
+            };
+          }
+          return sk;
+        }),
+      },
+    }));
+
+    return {
+      sidekickXp: missionXp,
+      passiveMentorXp,
+    };
+  };
+
+  const recruitSidekick = (sidekick: SidekickProfile): boolean => {
+    if (user.mentorInfo.sidekicks.length >= user.mentorInfo.maxSidekicks) {
+      return false;
+    }
+
+    setUser((prev) => ({
+      ...prev,
+      mentorInfo: {
+        ...prev.mentorInfo,
+        sidekicks: [...prev.mentorInfo.sidekicks, sidekick],
+      },
+    }));
+
+    return true;
+  };
+
+  const dismissSidekick = (sidekickId: string) => {
+    setUser((prev) => ({
+      ...prev,
+      mentorInfo: {
+        ...prev.mentorInfo,
+        sidekicks: prev.mentorInfo.sidekicks.filter((sk) => sk.id !== sidekickId),
+      },
+    }));
+  };
+
   return (
     <AppStateContext.Provider
       value={{
@@ -283,6 +556,15 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
         activeMissionId,
         setActiveMissionId,
         unlockSkillNode,
+        escrowTransactions,
+        createEscrowDeposit,
+        confirmAndReleaseEscrow,
+        redeemShopItem,
+        mentorshipMessages,
+        sendMentorshipMessage,
+        simulateSidekickMissionComplete,
+        recruitSidekick,
+        dismissSidekick,
       }}
     >
       {children}

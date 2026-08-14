@@ -31,6 +31,9 @@ import { CitizenHeroRadarView, NearbyHero } from '../../components/war-room/Citi
 import { ActiveMissionHUD, ActiveMissionDetail } from '../../components/war-room/ActiveMissionHUD';
 import { GateBreakModal } from '../../components/war-room/GateBreakModal';
 import { GateBreakCitizenModal } from '../../components/war-room/GateBreakCitizenModal';
+import { EscrowVaultModal } from '../../components/escrow/EscrowVaultModal';
+import { DualCurrencyShopModal } from '../../components/shop/DualCurrencyShopModal';
+import { SidekickMentorshipModal } from '../../components/mentorship/SidekickMentorshipModal';
 
 const { width } = Dimensions.get('window');
 
@@ -142,6 +145,9 @@ export default function TacticalWarRoomScreen() {
   const [routeModalData, setRouteModalData] = useState<RouteOptimizationData | null>(null);
   const [isDeployModalVisible, setIsDeployModalVisible] = useState(false);
   const [isGateBreakCitizenModalVisible, setIsGateBreakCitizenModalVisible] = useState(false);
+  const [isEscrowModalVisible, setIsEscrowModalVisible] = useState(false);
+  const [isShopModalVisible, setIsShopModalVisible] = useState(false);
+  const [isMentorshipModalVisible, setIsMentorshipModalVisible] = useState(false);
   const [activeMissionData, setActiveMissionData] = useState<ActiveMissionDetail | null>(null);
 
   const selectedBeacon = beacons.find((b) => b.id === selectedBeaconId) || beacons[0];
@@ -297,16 +303,18 @@ export default function TacticalWarRoomScreen() {
             <StatTile
               label="ESCROW VAULT"
               value={`Rp ${(user.escrowBalance / 1000).toFixed(0)}k`}
-              subValue="Secured Funds"
+              subValue="Tap to Open Vault"
               accentColor={colors.emerald}
               icon={<Ionicons name="lock-closed-outline" size={16} color={colors.emerald} />}
+              onPress={() => setIsEscrowModalVisible(true)}
             />
             <StatTile
               label="HERO COINS"
               value={user.heroCoins}
-              subValue="Reward Tokens"
+              subValue="Tap to Open Shop"
               accentColor={colors.amber}
               icon={<Ionicons name="shield-outline" size={16} color={colors.amber} />}
+              onPress={() => setIsShopModalVisible(true)}
             />
             <StatTile
               label="RATING / MISSIONS"
@@ -316,6 +324,28 @@ export default function TacticalWarRoomScreen() {
               icon={<Ionicons name="star-outline" size={16} color={colors.primary} />}
             />
           </View>
+
+          {/* Apprentice Field Comms Bar (If Hero is a Mentor with Sidekicks) */}
+          {role === 'hero' && user.mentorInfo.isMentor && (
+            <Pressable
+              onPress={() => {
+                trigger('selection');
+                setIsMentorshipModalVisible(true);
+              }}
+              style={[
+                styles.apprenticeCommsBar,
+                { backgroundColor: `${colors.primary}12`, borderColor: colors.primary },
+              ]}
+            >
+              <View style={styles.apprenticeLeft}>
+                <View style={[styles.liveDotSmall, { backgroundColor: colors.emerald }]} />
+                <Text variant="caption" weight="bold" color={colors.primary} style={{ marginLeft: 6 }}>
+                  SIDEKICK ACTIVE IN FIELD ({user.mentorInfo.sidekicks[0]?.callsign || 'NOVA-03'})
+                </Text>
+              </View>
+              <Badge label="OPEN LIVE COMMS" color="cyan" variant="status" />
+            </Pressable>
+          )}
         </View>
 
         {/* Active Mission HUD (If a mission is currently in-progress) */}
@@ -621,6 +651,24 @@ export default function TacticalWarRoomScreen() {
         onAcceptEmergency={handleEmergencyAccept}
         onDecline={() => clearEmergency()}
       />
+
+      {/* Escrow Vault Financial Management Modal */}
+      <EscrowVaultModal
+        visible={isEscrowModalVisible}
+        onClose={() => setIsEscrowModalVisible(false)}
+      />
+
+      {/* Dual-Currency Reward Shop Modal */}
+      <DualCurrencyShopModal
+        visible={isShopModalVisible}
+        onClose={() => setIsShopModalVisible(false)}
+      />
+
+      {/* Sidekick Mentorship & Live Comms Modal */}
+      <SidekickMentorshipModal
+        visible={isMentorshipModalVisible}
+        onClose={() => setIsMentorshipModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -640,6 +688,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginTop: 8,
+  },
+  apprenticeCommsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  apprenticeLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  liveDotSmall: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   citizenSection: {
     marginTop: 8,

@@ -20,6 +20,9 @@ import {
   Divider,
 } from '../../components/ui';
 import { CareerSkillTreeModal } from '../../components/skill-tree/CareerSkillTreeModal';
+import { EscrowVaultModal } from '../../components/escrow/EscrowVaultModal';
+import { DualCurrencyShopModal } from '../../components/shop/DualCurrencyShopModal';
+import { SidekickMentorshipModal } from '../../components/mentorship/SidekickMentorshipModal';
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
@@ -28,6 +31,9 @@ export default function ProfileScreen() {
   const { user, logout } = useAppState();
 
   const [isSkillTreeVisible, setIsSkillTreeVisible] = useState(false);
+  const [isEscrowModalVisible, setIsEscrowModalVisible] = useState(false);
+  const [isShopModalVisible, setIsShopModalVisible] = useState(false);
+  const [isMentorshipModalVisible, setIsMentorshipModalVisible] = useState(false);
 
   const getKycBadgeColor = (): BadgeColor => {
     switch (user.verificationStatus) {
@@ -98,6 +104,43 @@ export default function ProfileScreen() {
           />
         </TacticalCard>
 
+        {/* The Sidekick System (Built-in Mentorship) */}
+        <TacticalCard accent="cyan" elevated style={styles.sidekickBanner}>
+          <View style={styles.sidekickBannerHeader}>
+            <View style={[styles.sidekickIconBox, { backgroundColor: `${colors.primary}20`, borderColor: colors.primary }]}>
+              <Ionicons name="people" size={24} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={styles.sidekickTitleRow}>
+                <Text variant="h3" color={colors.primary}>
+                  THE SIDEKICK SYSTEM
+                </Text>
+                <Badge
+                  label={`${user.mentorInfo.sidekicks.length}/${user.mentorInfo.maxSidekicks} SLOTS`}
+                  color="emerald"
+                  variant="status"
+                />
+              </View>
+              <Text variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                Bimbing hingga 2 Sidekick baru via live comms & video call. Dapatkan {user.mentorInfo.passiveXpPercentage}% Passive XP dari setiap misi mereka!
+              </Text>
+            </View>
+          </View>
+
+          <Button
+            title="OPEN MENTORSHIP & LIVE COMMS HUD"
+            variant="primary"
+            size="md"
+            fullWidth
+            leftIcon={<Ionicons name="chatbubbles-outline" size={18} color={colors.textInverse} />}
+            onPress={() => {
+              trigger('selection');
+              setIsMentorshipModalVisible(true);
+            }}
+            style={{ marginTop: 12 }}
+          />
+        </TacticalCard>
+
         {/* Career Skill Trees & Progression Banner */}
         <TacticalCard accent="cyan" elevated style={styles.skillTreeBanner}>
           <View style={styles.skillTreeBannerHeader}>
@@ -134,6 +177,63 @@ export default function ProfileScreen() {
             style={{ marginTop: 12 }}
           />
         </TacticalCard>
+
+        {/* Escrow Vault & Dual-Currency Shop Hub */}
+        <View style={styles.financeHubRow}>
+          {/* Escrow Vault Card */}
+          <TacticalCard accent="emerald" elevated style={styles.financeCard}>
+            <View style={styles.financeCardHeader}>
+              <View style={[styles.financeIconBox, { backgroundColor: `${colors.emerald}20`, borderColor: colors.emerald }]}>
+                <Ionicons name="lock-closed" size={20} color={colors.emerald} />
+              </View>
+              <Badge label="PROTECTED" color="emerald" variant="status" />
+            </View>
+            <Text variant="h3" color={colors.emerald} style={{ marginTop: 6 }}>
+              ESCROW VAULT
+            </Text>
+            <Text variant="caption" color={colors.textSecondary} style={{ marginVertical: 4 }}>
+              Dana pembayaran tersimpan aman & diteruskan otomatis setelah konfirmasi.
+            </Text>
+            <Button
+              title="MANAGE VAULT"
+              variant="outline"
+              size="sm"
+              fullWidth
+              leftIcon={<Ionicons name="wallet-outline" size={14} color={colors.emerald} />}
+              onPress={() => {
+                trigger('selection');
+                setIsEscrowModalVisible(true);
+              }}
+            />
+          </TacticalCard>
+
+          {/* Dual-Currency Shop Card */}
+          <TacticalCard accent="amber" elevated style={styles.financeCard}>
+            <View style={styles.financeCardHeader}>
+              <View style={[styles.financeIconBox, { backgroundColor: `${colors.amber}20`, borderColor: colors.amber }]}>
+                <Ionicons name="storefront" size={20} color={colors.amber} />
+              </View>
+              <Badge label={`${user.heroCoins} HC`} color="amber" variant="status" />
+            </View>
+            <Text variant="h3" color={colors.amber} style={{ marginTop: 6 }}>
+              REWARD SHOP
+            </Text>
+            <Text variant="caption" color={colors.textSecondary} style={{ marginVertical: 4 }}>
+              Tukarkan Hero Coins untuk BPJS, Asuransi Kecelakaan & Diskon Toolkit.
+            </Text>
+            <Button
+              title="OPEN SHOP"
+              variant="outline"
+              size="sm"
+              fullWidth
+              leftIcon={<Ionicons name="cart-outline" size={14} color={colors.amber} />}
+              onPress={() => {
+                trigger('selection');
+                setIsShopModalVisible(true);
+              }}
+            />
+          </TacticalCard>
+        </View>
 
         {/* KYC Verification Action Banner */}
         <TacticalCard
@@ -180,16 +280,18 @@ export default function ProfileScreen() {
           <StatTile
             label="ESCROW VAULT"
             value={`Rp ${(user.escrowBalance / 1000).toFixed(0)}k`}
-            subValue="Secured Payouts"
+            subValue="Tap to Manage"
             accentColor={colors.emerald}
             icon={<Ionicons name="lock-closed-outline" size={16} color={colors.emerald} />}
+            onPress={() => setIsEscrowModalVisible(true)}
           />
           <StatTile
             label="HERO COINS"
             value={user.heroCoins}
-            subValue="Reward Tokens"
+            subValue="Tap to Redeem"
             accentColor={colors.amber}
             icon={<Ionicons name="shield-outline" size={16} color={colors.amber} />}
+            onPress={() => setIsShopModalVisible(true)}
           />
         </View>
 
@@ -259,10 +361,28 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
+      {/* Sidekick Mentorship Modal */}
+      <SidekickMentorshipModal
+        visible={isMentorshipModalVisible}
+        onClose={() => setIsMentorshipModalVisible(false)}
+      />
+
       {/* Career Skill Tree RPG Modal */}
       <CareerSkillTreeModal
         visible={isSkillTreeVisible}
         onClose={() => setIsSkillTreeVisible(false)}
+      />
+
+      {/* Escrow Vault Modal */}
+      <EscrowVaultModal
+        visible={isEscrowModalVisible}
+        onClose={() => setIsEscrowModalVisible(false)}
+      />
+
+      {/* Dual-Currency Shop Modal */}
+      <DualCurrencyShopModal
+        visible={isShopModalVisible}
+        onClose={() => setIsShopModalVisible(false)}
       />
     </SafeAreaView>
   );
@@ -299,6 +419,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginTop: 12,
   },
+  sidekickBanner: {
+    marginBottom: 12,
+  },
+  sidekickBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sidekickIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sidekickTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   skillTreeBanner: {
     marginBottom: 12,
   },
@@ -318,6 +458,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  financeHubRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  financeCard: {
+    flex: 1,
+    padding: 12,
+  },
+  financeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  financeIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   kycBanner: {
     marginBottom: 8,
