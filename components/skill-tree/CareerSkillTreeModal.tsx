@@ -5,7 +5,9 @@ import {
   Modal,
   ScrollView,
   Pressable,
+  Dimensions,
 } from 'react-native';
+import Svg, { Line, Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { useHaptics } from '../../hooks/useHaptics';
@@ -20,7 +22,6 @@ import {
   TacticalCard,
   Button,
   Badge,
-  BadgeColor,
   ProgressBar,
   Divider,
 } from '../ui';
@@ -29,6 +30,10 @@ interface CareerSkillTreeModalProps {
   visible: boolean;
   onClose: () => void;
 }
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CANVAS_WIDTH = Math.min(SCREEN_WIDTH - 40, 380);
+const CANVAS_HEIGHT = 380;
 
 export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
   visible,
@@ -76,7 +81,7 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
     const success = unlockSkillNode(node.id, node.xpCost, node.titleIndo);
     if (success) {
       trigger('success');
-      setUnlockSuccessMsg(`🎉 SPESIALISASI DIBUKA: ${node.name.toUpperCase()} (+PERK DIAKTIFKAN)!`);
+      setUnlockSuccessMsg(`🎉 BERHASIL MEMBUKA: ${node.name.toUpperCase()} (+PERKS DIAKTIFKAN)!`);
     } else {
       trigger('error');
     }
@@ -84,6 +89,32 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
 
   const branchUnlockedCount = getBranchUnlockedCount(selectedBranch);
   const branchMasteryPercent = Math.round((branchUnlockedCount / selectedBranch.nodes.length) * 100);
+  const branchAccentColor = colors[selectedBranch.accent as keyof typeof colors] || colors.primary;
+
+  // Helper to convert % to canvas pixel coordinates
+  const getCanvasCoord = (pctX: number, pctY: number) => {
+    return {
+      x: (pctX / 100) * CANVAS_WIDTH,
+      y: (pctY / 100) * CANVAS_HEIGHT,
+    };
+  };
+
+  // Branch connections
+  const coreNode = selectedBranch.nodes.find((n) => n.branchPath === 'core') || selectedBranch.nodes[0];
+  const node2a = selectedBranch.nodes.find((n) => n.id === `${selectedBranch.id}_2a`);
+  const node3a = selectedBranch.nodes.find((n) => n.id === `${selectedBranch.id}_3a`);
+  const node2b = selectedBranch.nodes.find((n) => n.id === `${selectedBranch.id}_2b`);
+  const node3b = selectedBranch.nodes.find((n) => n.id === `${selectedBranch.id}_3b`);
+
+  const connections = [
+    { from: coreNode, to: node2a },
+    { from: coreNode, to: node2b },
+    { from: node2a, to: node3a },
+    { from: node2b, to: node3b },
+  ].filter((c) => c.from && c.to) as { from: SkillNode; to: SkillNode }[];
+
+  const isSelectedNodeUnlocked = isNodeUnlocked(selectedNode.id);
+  const isSelectedNodeAvailable = isNodeAvailable(selectedNode);
 
   return (
     <Modal
@@ -92,28 +123,31 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
+      <View style={[styles.backdrop, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}>
         <View
           style={[
             styles.modalContainer,
-            { backgroundColor: 'rgba(8, 14, 23, 0.97)', borderColor: 'rgba(0, 229, 255, 0.4)' },
+            {
+              backgroundColor: colors.background,
+              borderColor: `${branchAccentColor}60`,
+            },
           ]}
         >
-          {/* Top Light Ray Bar */}
-          <View style={styles.topLightRay} />
+          {/* Top Light Ray synced with branch accent */}
+          <View style={[styles.topLightRay, { backgroundColor: branchAccentColor }]} />
 
           {/* Modal Header */}
-          <View style={[styles.header, { borderBottomColor: 'rgba(255, 255, 255, 0.08)' }]}>
+          <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
             <View style={styles.headerTitleRow}>
-              <View style={[styles.headerIconBox, { backgroundColor: `${colors.primary}20`, borderColor: colors.primary }]}>
-                <Ionicons name="git-network" size={20} color={colors.primary} />
+              <View style={[styles.headerIconBox, { backgroundColor: `${branchAccentColor}20`, borderColor: branchAccentColor }]}>
+                <Ionicons name="git-branch" size={20} color={branchAccentColor} />
               </View>
               <View style={{ marginLeft: 10 }}>
-                <Text variant="h3" color={colors.primary} style={{ letterSpacing: 0.5 }}>
-                  CAREER SKILL TREES
+                <Text variant="h3" color={branchAccentColor} style={{ letterSpacing: 0.5 }}>
+                  BRANCHING SKILL MATRIX
                 </Text>
                 <Text variant="caption" color={colors.textSecondary}>
-                  RPG PROGRESSION • XP GATEKEEPER & CERTIFICATIONS
+                  RPG CONNECTED NODE TREE & SPECIALIZATIONS
                 </Text>
               </View>
             </View>
@@ -134,34 +168,34 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
           </View>
 
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {/* Operator Telemetry HUD */}
-            <TacticalCard accent="cyan" elevated style={styles.telemetryCard}>
+            {/* Operator Telemetry Bar */}
+            <TacticalCard accent={selectedBranch.accent} elevated style={styles.telemetryCard}>
               <View style={styles.telemetryTop}>
                 <View>
-                  <Text variant="caption" color={colors.textMuted}>OPERATOR LEVEL & STATUS</Text>
-                  <Text variant="h3" color={colors.primary} style={{ fontSize: 16 }}>
+                  <Text variant="caption" color={colors.textMuted}>OPERATOR LEVEL & MASTERY</Text>
+                  <Text variant="h3" color={branchAccentColor} style={{ fontSize: 16 }}>
                     {`LEVEL ${user.level} // ${user.rankTitle.toUpperCase()}`}
                   </Text>
                 </View>
                 <Badge
-                  label={`${user.unlockedSkillNodeIds.length} SPECIALIZATIONS`}
-                  color="emerald"
+                  label={`${branchMasteryPercent}% ${selectedBranch.name.split(' ')[0]} MASTERY`}
+                  color={selectedBranch.accent}
                   variant="status"
                 />
               </View>
 
               <ProgressBar
                 progress={user.xp / user.nextLevelXp}
-                label="AVAILABLE OPERATOR XP RESERVE"
+                label="OPERATOR EXP RESERVE"
                 valueText={`${user.xp.toLocaleString()} / ${user.nextLevelXp.toLocaleString()} XP`}
-                color={colors.primary}
+                color={branchAccentColor}
                 height={7}
                 style={{ marginTop: 10 }}
               />
             </TacticalCard>
 
             {/* Discipline Switcher Tabs */}
-            <Divider label="// 1. SELECT CAREER DISCIPLINE" />
+            <Divider label="// 1. SELECT CAREER TREE BRANCH" />
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.branchTabsRow}>
               {SKILL_BRANCHES.map((b) => {
@@ -176,7 +210,7 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
                     style={({ pressed }) => [
                       styles.branchTab,
                       {
-                        backgroundColor: isActive ? `${accentColor}22` : colors.surfaceElevated,
+                        backgroundColor: isActive ? `${accentColor}25` : colors.surface,
                         borderColor: isActive ? accentColor : colors.border,
                         shadowColor: isActive ? accentColor : 'transparent',
                       },
@@ -198,7 +232,7 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
                         {b.name}
                       </Text>
                       <Text variant="caption" color={colors.textMuted} style={{ fontSize: 9.5 }}>
-                        {unlockedInBranch}/{b.nodes.length} Mastered
+                        {unlockedInBranch}/{b.nodes.length} Nodes Mastered ({Math.round((unlockedInBranch / b.nodes.length) * 100)}%)
                       </Text>
                     </View>
                   </Pressable>
@@ -206,29 +240,7 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
               })}
             </ScrollView>
 
-            {/* Branch Summary & Mastery Gauge */}
-            <TacticalCard accent={selectedBranch.accent} style={styles.branchSummaryCard}>
-              <View style={styles.branchSummaryTop}>
-                <View style={{ flex: 1 }}>
-                  <Text variant="body" weight="bold" color={colors[selectedBranch.accent as keyof typeof colors]}>
-                    {selectedBranch.name}
-                  </Text>
-                  <Text variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
-                    {selectedBranch.description}
-                  </Text>
-                </View>
-                <View style={styles.masteryPill}>
-                  <Text variant="mono" weight="bold" color={colors[selectedBranch.accent as keyof typeof colors]} style={{ fontSize: 14 }}>
-                    {branchMasteryPercent}%
-                  </Text>
-                  <Text variant="caption" color={colors.textMuted} style={{ fontSize: 9 }}>
-                    MASTERY
-                  </Text>
-                </View>
-              </View>
-            </TacticalCard>
-
-            {/* Success Toast */}
+            {/* Toast Notification */}
             {unlockSuccessMsg ? (
               <View style={[styles.toastBox, { backgroundColor: `${colors.emerald}20`, borderColor: colors.emerald }]}>
                 <Ionicons name="sparkles" size={18} color={colors.emerald} />
@@ -238,197 +250,345 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
               </View>
             ) : null}
 
-            {/* Connected Progression Node Graph (Tier 1 ➔ Tier 2 ➔ Tier 3) */}
-            <Divider label={`// 2. CONNECTED PROGRESSION TREE (${selectedBranch.nodes.length} TIERS)`} />
+            {/* =========================================================================
+                VISUAL RPG BRANCHING TREE CANVAS WITH SVG CONNECTOR LINES & ORB NODES
+                ========================================================================= */}
+            <Divider label={`// 2. ${selectedBranch.name} // VISUAL NODE GRAPH`} />
 
-            <View style={styles.treeContainer}>
-              {/* Central Glowing Circuit Spine Line */}
-              <View style={[styles.circuitSpine, { borderColor: 'rgba(0, 229, 255, 0.25)' }]} />
+            <View style={styles.treeCanvasContainer}>
+              {/* Path Category Badges on Left & Right */}
+              <View style={styles.pathHeaderRow}>
+                <View style={[styles.pathTag, { backgroundColor: colors.surface, borderColor: `${branchAccentColor}50` }]}>
+                  <Text variant="mono" weight="bold" color={branchAccentColor} style={{ fontSize: 9 }}>
+                    ⮜ PATH A: HEAVY COMMERCIAL
+                  </Text>
+                </View>
+                <View style={[styles.pathTag, { backgroundColor: colors.surface, borderColor: `${colors.amber}50` }]}>
+                  <Text variant="mono" weight="bold" color={colors.amber} style={{ fontSize: 9 }}>
+                    PATH B: SMART AUTOMATION ⮞
+                  </Text>
+                </View>
+              </View>
 
-              {selectedBranch.nodes.map((node, index) => {
-                const unlocked = isNodeUnlocked(node.id);
-                const available = isNodeAvailable(node);
-                const isSelected = selectedNode.id === node.id;
+              <View
+                style={[
+                  styles.canvasBox,
+                  {
+                    width: CANVAS_WIDTH,
+                    height: CANVAS_HEIGHT,
+                    backgroundColor: colors.surface,
+                    borderColor: `${branchAccentColor}35`,
+                  },
+                ]}
+              >
+                {/* SVG Branch Lines Layer */}
+                <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={StyleSheet.absoluteFillObject}>
+                  {connections.map((conn, idx) => {
+                    const fromCoord = getCanvasCoord(conn.from.gridX, conn.from.gridY);
+                    const toCoord = getCanvasCoord(conn.to.gridX, conn.to.gridY);
 
-                let statusBadgeColor: BadgeColor = 'muted';
-                let statusLabel = `LOCKED // REQ LVL ${node.levelRequired}`;
+                    const isFromUnlocked = isNodeUnlocked(conn.from.id);
+                    const isToUnlocked = isNodeUnlocked(conn.to.id);
+                    const isToAvailable = isNodeAvailable(conn.to);
 
-                if (unlocked) {
-                  statusBadgeColor = 'emerald';
-                  statusLabel = 'ACTIVE // MASTERED';
-                } else if (available) {
-                  statusBadgeColor = 'amber';
-                  statusLabel = `AVAILABLE TO UNLOCK (${node.xpCost} XP)`;
-                }
+                    let strokeColor = `${colors.border}60`;
+                    let strokeWidth = 2;
+                    let strokeDasharray: string | undefined = '4, 4';
 
-                return (
-                  <View key={node.id} style={styles.nodeWrapper}>
-                    {/* Node Row Header & Connector Dot */}
-                    <View style={styles.nodeSpineRow}>
+                    if (isFromUnlocked && isToUnlocked) {
+                      strokeColor = colors.emerald;
+                      strokeWidth = 3.5;
+                      strokeDasharray = undefined;
+                    } else if (isFromUnlocked && isToAvailable) {
+                      strokeColor = colors.amber;
+                      strokeWidth = 2.5;
+                      strokeDasharray = '6, 3';
+                    }
+
+                    return (
+                      <React.Fragment key={idx}>
+                        <Line
+                          x1={fromCoord.x}
+                          y1={fromCoord.y}
+                          x2={toCoord.x}
+                          y2={toCoord.y}
+                          stroke={strokeColor}
+                          strokeWidth={strokeWidth}
+                          strokeDasharray={strokeDasharray}
+                        />
+                        {/* Midpoint glowing node bead */}
+                        {isFromUnlocked && isToUnlocked && (
+                          <Circle
+                            cx={(fromCoord.x + toCoord.x) / 2}
+                            cy={(fromCoord.y + toCoord.y) / 2}
+                            r={3.5}
+                            fill={colors.emerald}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </Svg>
+
+                {/* Interactive Node Orb Pins */}
+                {selectedBranch.nodes.map((node) => {
+                  const unlocked = isNodeUnlocked(node.id);
+                  const available = isNodeAvailable(node);
+                  const isSelected = selectedNode.id === node.id;
+                  const coord = getCanvasCoord(node.gridX, node.gridY);
+
+                  let orbBorderColor = colors.border;
+                  let orbBgColor = colors.surfaceElevated;
+                  let glowShadowColor = 'transparent';
+
+                  if (isSelected) {
+                    orbBorderColor = branchAccentColor;
+                    orbBgColor = `${branchAccentColor}30`;
+                    glowShadowColor = branchAccentColor;
+                  } else if (unlocked) {
+                    orbBorderColor = colors.emerald;
+                    orbBgColor = `${colors.emerald}25`;
+                    glowShadowColor = colors.emerald;
+                  } else if (available) {
+                    orbBorderColor = colors.amber;
+                    orbBgColor = `${colors.amber}25`;
+                    glowShadowColor = colors.amber;
+                  }
+
+                  return (
+                    <Pressable
+                      key={node.id}
+                      onPress={() => handleSelectNode(node)}
+                      style={[
+                        styles.nodeOrbWrapper,
+                        {
+                          left: coord.x - 28,
+                          top: coord.y - 28,
+                        },
+                      ]}
+                    >
+                      {/* Orb Circle */}
                       <View
                         style={[
-                          styles.spineNodeDot,
+                          styles.nodeOrb,
                           {
-                            backgroundColor: unlocked ? colors.emerald : available ? colors.amber : colors.surfaceElevated,
-                            borderColor: unlocked ? colors.emerald : available ? colors.amber : colors.border,
+                            borderColor: orbBorderColor,
+                            backgroundColor: orbBgColor,
+                            shadowColor: glowShadowColor,
+                            borderWidth: isSelected ? 2.5 : unlocked || available ? 2 : 1.5,
+                            transform: [{ scale: isSelected ? 1.15 : 1 }],
                           },
                         ]}
                       >
-                        {unlocked ? (
-                          <Ionicons name="checkmark" size={12} color="#000" />
-                        ) : available ? (
-                          <Ionicons name="lock-open" size={10} color="#000" />
-                        ) : (
-                          <Ionicons name="lock-closed" size={10} color={colors.textMuted} />
-                        )}
+                        <Ionicons
+                          name={node.icon as any}
+                          size={22}
+                          color={
+                            unlocked
+                              ? colors.emerald
+                              : available
+                              ? colors.amber
+                              : isSelected
+                              ? branchAccentColor
+                              : colors.textMuted
+                          }
+                        />
+
+                        {/* Status Mini Icon Badge */}
+                        <View
+                          style={[
+                            styles.orbStatusBadge,
+                            {
+                              backgroundColor: unlocked
+                                ? colors.emerald
+                                : available
+                                ? colors.amber
+                                : colors.surfaceElevated,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                        >
+                          {unlocked ? (
+                            <Ionicons name="checkmark" size={9} color="#000" />
+                          ) : available ? (
+                            <Ionicons name="lock-open" size={8} color="#000" />
+                          ) : (
+                            <Ionicons name="lock-closed" size={8} color={colors.textMuted} />
+                          )}
+                        </View>
                       </View>
 
-                      <Text variant="mono" weight="bold" color={unlocked ? colors.emerald : available ? colors.amber : colors.textMuted} style={styles.tierTag}>
-                        {`TIER 0${node.tier} // ${node.tier === 1 ? 'APPRENTICE BASELINE' : node.tier === 2 ? 'SPECIALIST OPERATOR' : 'MASTER ENGINEER'}`}
-                      </Text>
-                    </View>
-
-                    {/* Node Interactive Card */}
-                    <Pressable
-                      onPress={() => handleSelectNode(node)}
-                      style={({ pressed }) => [
-                        styles.nodeCard,
-                        {
-                          backgroundColor: isSelected ? `${colors.surfaceElevated}FA` : `${colors.surface}F5`,
-                          borderColor: isSelected
-                            ? colors.primary
-                            : unlocked
-                            ? `${colors.emerald}70`
-                            : available
-                            ? `${colors.amber}70`
-                            : 'rgba(255, 255, 255, 0.08)',
-                          shadowColor: isSelected ? colors.primary : unlocked ? colors.emerald : 'transparent',
-                          borderWidth: isSelected ? 2 : 1,
-                        },
-                        pressed && { transform: [{ scale: 0.985 }] },
-                      ]}
-                    >
-                      {/* Top Ray Accent on Card */}
+                      {/* Node Label Pill below orb */}
                       <View
                         style={[
-                          styles.cardTopRay,
+                          styles.nodeOrbLabelPill,
                           {
-                            backgroundColor: isSelected
-                              ? colors.primary
+                            backgroundColor: isSelected ? `${branchAccentColor}25` : colors.surface,
+                            borderColor: isSelected ? branchAccentColor : colors.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          variant="mono"
+                          weight={isSelected ? 'bold' : 'semibold'}
+                          color={
+                            isSelected
+                              ? branchAccentColor
                               : unlocked
                               ? colors.emerald
                               : available
                               ? colors.amber
-                              : 'transparent',
-                          },
-                        ]}
-                      />
-
-                      <View style={styles.nodeCardHeader}>
-                        <View style={styles.nodeHeaderLeft}>
-                          <View
-                            style={[
-                              styles.nodeIconBox,
-                              {
-                                backgroundColor: unlocked
-                                  ? `${colors.emerald}20`
-                                  : available
-                                  ? `${colors.amber}20`
-                                  : 'rgba(255, 255, 255, 0.05)',
-                                borderColor: unlocked
-                                  ? colors.emerald
-                                  : available
-                                  ? colors.amber
-                                  : colors.border,
-                              },
-                            ]}
-                          >
-                            <Ionicons
-                              name={node.icon as any}
-                              size={20}
-                              color={unlocked ? colors.emerald : available ? colors.amber : colors.textMuted}
-                            />
-                          </View>
-
-                          <View style={{ marginLeft: 10, flex: 1 }}>
-                            <Text variant="h3" style={{ fontSize: 15 }}>
-                              {node.name}
-                            </Text>
-                            <Text variant="caption" color={colors.textSecondary}>
-                              {node.titleIndo}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <Badge label={statusLabel} color={statusBadgeColor} variant="status" />
-                      </View>
-
-                      <Text variant="bodySecondary" color={colors.textPrimary} style={{ marginVertical: 8, fontSize: 12.5 }}>
-                        {node.summary}
-                      </Text>
-
-                      {/* Tactical Perks Grid */}
-                      <View style={[styles.perksBox, { backgroundColor: 'rgba(10, 16, 26, 0.7)', borderColor: 'rgba(255, 255, 255, 0.06)' }]}>
-                        {node.tacticalPerks.map((perk, pIdx) => (
-                          <View key={pIdx} style={styles.perkRow}>
-                            <Ionicons
-                              name="flash"
-                              size={13}
-                              color={unlocked ? colors.emerald : available ? colors.amber : colors.textMuted}
-                            />
-                            <Text
-                              variant="caption"
-                              color={unlocked ? colors.textPrimary : colors.textSecondary}
-                              style={{ marginLeft: 6, flex: 1, fontSize: 11 }}
-                            >
-                              {perk}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-
-                      {/* Unlocked Corporate Contracts */}
-                      <View style={styles.contractsUnlockedRow}>
-                        <Ionicons name="briefcase-outline" size={13} color={colors.primary} />
-                        <Text variant="caption" color={colors.textMuted} style={{ marginLeft: 6, flex: 1, fontSize: 10.5 }}>
-                          Unlocked Contracts: <Text variant="caption" weight="bold" color={colors.primary}>{node.unlockedContracts.join(' • ')}</Text>
+                              : colors.textMuted
+                          }
+                          numberOfLines={1}
+                          style={styles.orbLabelText}
+                        >
+                          {`T${node.tier} // ${node.titleIndo.slice(0, 14)}`}
                         </Text>
                       </View>
-
-                      {/* Action Button: Unlock or Certified Tag */}
-                      <View style={[styles.nodeActionRow, { borderTopColor: 'rgba(255, 255, 255, 0.08)' }]}>
-                        {unlocked ? (
-                          <View style={styles.unlockedActiveBadge}>
-                            <Ionicons name="shield-checkmark" size={16} color={colors.emerald} />
-                            <Text variant="mono" weight="bold" color={colors.emerald} style={{ marginLeft: 6, fontSize: 11 }}>
-                              ACTIVE SPECIALIZATION // PERKS APPLIED
-                            </Text>
-                          </View>
-                        ) : available ? (
-                          <Button
-                            title={`⚡ UNLOCK SPECIALIZATION (-${node.xpCost} XP)`}
-                            variant="primary"
-                            size="md"
-                            fullWidth
-                            leftIcon={<Ionicons name="sparkles" size={16} color={colors.textInverse} />}
-                            onPress={() => handleUnlockNode(node)}
-                          />
-                        ) : (
-                          <View style={styles.lockedRequirementRow}>
-                            <Ionicons name="lock-closed" size={14} color={colors.crimson} />
-                            <Text variant="caption" color={colors.crimson} style={{ marginLeft: 6 }}>
-                              {node.prerequisiteId && !isNodeUnlocked(node.prerequisiteId)
-                                ? `Requires Tier ${node.tier - 1} Specialization Unlocked First`
-                                : `Requires Operator Level ${node.levelRequired} (Current: Lvl ${user.level})`}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
                     </Pressable>
-                  </View>
-                );
-              })}
+                  );
+                })}
+              </View>
             </View>
+
+            {/* =========================================================================
+                INSPECTED NODE TELEMETRY & PERK UNLOCK DRAWER
+                ========================================================================= */}
+            <Divider label={`// 3. INSPECTION: ${selectedNode.name.toUpperCase()}`} />
+
+            <TacticalCard
+              accent={isSelectedNodeUnlocked ? 'emerald' : isSelectedNodeAvailable ? 'amber' : selectedBranch.accent}
+              elevated
+              style={styles.inspectionCard}
+            >
+              {/* Inspection Header */}
+              <View style={styles.inspectHeader}>
+                <View style={styles.inspectHeaderLeft}>
+                  <View
+                    style={[
+                      styles.inspectIconBox,
+                      {
+                        backgroundColor: isSelectedNodeUnlocked
+                          ? `${colors.emerald}20`
+                          : isSelectedNodeAvailable
+                          ? `${colors.amber}20`
+                          : `${branchAccentColor}20`,
+                        borderColor: isSelectedNodeUnlocked
+                          ? colors.emerald
+                          : isSelectedNodeAvailable
+                          ? colors.amber
+                          : branchAccentColor,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={selectedNode.icon as any}
+                      size={22}
+                      color={
+                        isSelectedNodeUnlocked
+                          ? colors.emerald
+                          : isSelectedNodeAvailable
+                          ? colors.amber
+                          : branchAccentColor
+                      }
+                    />
+                  </View>
+
+                  <View style={{ marginLeft: 10, flex: 1 }}>
+                    <Text variant="h3" style={{ fontSize: 16 }}>
+                      {selectedNode.name}
+                    </Text>
+                    <Text variant="caption" color={colors.textSecondary}>
+                      {selectedNode.titleIndo}
+                    </Text>
+                  </View>
+                </View>
+
+                <Badge
+                  label={
+                    isSelectedNodeUnlocked
+                      ? 'MASTERED // ACTIVE'
+                      : isSelectedNodeAvailable
+                      ? `UNLOCK (${selectedNode.xpCost} XP)`
+                      : `REQ LEVEL ${selectedNode.levelRequired}`
+                  }
+                  color={
+                    isSelectedNodeUnlocked
+                      ? 'emerald'
+                      : isSelectedNodeAvailable
+                      ? 'amber'
+                      : 'muted'
+                  }
+                  variant="status"
+                />
+              </View>
+
+              <Text variant="bodySecondary" color={colors.textPrimary} style={{ marginVertical: 8 }}>
+                {selectedNode.summary}
+              </Text>
+
+              {/* Tactical RPG Perks Box */}
+              <View style={[styles.inspectPerksBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                <Text variant="caption" weight="bold" color={colors.textMuted} style={{ marginBottom: 4 }}>
+                  TACTICAL PERKS & STAT BUFFS:
+                </Text>
+                {selectedNode.tacticalPerks.map((perk, idx) => (
+                  <View key={idx} style={styles.inspectPerkRow}>
+                    <Ionicons
+                      name="flash"
+                      size={14}
+                      color={isSelectedNodeUnlocked ? colors.emerald : isSelectedNodeAvailable ? colors.amber : branchAccentColor}
+                    />
+                    <Text
+                      variant="caption"
+                      color={isSelectedNodeUnlocked ? colors.textPrimary : colors.textSecondary}
+                      style={{ marginLeft: 6, flex: 1, fontSize: 11.5 }}
+                    >
+                      {perk}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Unlocked Corporate Contracts */}
+              <View style={styles.contractsRow}>
+                <Ionicons name="briefcase-outline" size={14} color={branchAccentColor} />
+                <Text variant="caption" color={colors.textSecondary} style={{ marginLeft: 6, flex: 1, fontSize: 11 }}>
+                  Unlocked Contracts: <Text variant="caption" weight="bold" color={branchAccentColor}>{selectedNode.unlockedContracts.join(' • ')}</Text>
+                </Text>
+              </View>
+
+              {/* Action Button: Unlock or Active Badge */}
+              <View style={[styles.inspectActionRow, { borderTopColor: colors.border }]}>
+                {isSelectedNodeUnlocked ? (
+                  <View style={[styles.activeCertifiedBanner, { backgroundColor: `${colors.emerald}15`, borderColor: colors.emerald }]}>
+                    <Ionicons name="shield-checkmark" size={18} color={colors.emerald} />
+                    <Text variant="mono" weight="bold" color={colors.emerald} style={{ marginLeft: 8, fontSize: 12 }}>
+                      SPECIALIZATION ACTIVE // PERKS APPLIED
+                    </Text>
+                  </View>
+                ) : isSelectedNodeAvailable ? (
+                  <Button
+                    title={`⚡ UNLOCK SPECIALIZATION (-${selectedNode.xpCost} XP)`}
+                    variant="primary"
+                    size="md"
+                    fullWidth
+                    leftIcon={<Ionicons name="sparkles" size={18} color={colors.textInverse} />}
+                    onPress={() => handleUnlockNode(selectedNode)}
+                  />
+                ) : (
+                  <View style={[styles.lockedWarningBox, { borderColor: colors.crimson, backgroundColor: `${colors.crimson}15` }]}>
+                    <Ionicons name="lock-closed" size={16} color={colors.crimson} />
+                    <Text variant="caption" color={colors.crimson} style={{ marginLeft: 8, flex: 1 }}>
+                      {selectedNode.prerequisiteId && !isNodeUnlocked(selectedNode.prerequisiteId)
+                        ? `Prerequisite Required: Unlock Tier ${selectedNode.tier - 1} node first.`
+                        : `Required Operator Level ${selectedNode.levelRequired} (You are Level ${user.level}).`}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TacticalCard>
           </ScrollView>
         </View>
       </View>
@@ -439,11 +599,10 @@ export const CareerSkillTreeModal: React.FC<CareerSkillTreeModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    height: '92%',
+    height: '94%',
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     borderWidth: 1,
@@ -455,8 +614,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: '20%',
     right: '20%',
-    height: 2,
-    backgroundColor: 'rgba(0, 229, 255, 0.6)',
+    height: 2.5,
     zIndex: 10,
   },
   header: {
@@ -464,7 +622,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderBottomWidth: 1,
   },
   headerTitleRow: {
@@ -489,7 +647,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingTop: 12,
     paddingBottom: 40,
   },
   telemetryCard: {
@@ -512,29 +670,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  branchSummaryCard: {
-    marginBottom: 10,
-  },
-  branchSummaryTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  masteryPill: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    marginLeft: 10,
   },
   toastBox: {
     flexDirection: 'row',
@@ -544,111 +679,130 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
   },
-  treeContainer: {
-    position: 'relative',
-    marginTop: 6,
-  },
-  circuitSpine: {
-    position: 'absolute',
-    left: 11,
-    top: 15,
-    bottom: 20,
-    width: 2,
-    borderLeftWidth: 2,
-    borderStyle: 'dashed',
-    zIndex: 1,
-  },
-  nodeWrapper: {
-    position: 'relative',
-    marginBottom: 16,
-    zIndex: 2,
-  },
-  nodeSpineRow: {
-    flexDirection: 'row',
+  treeCanvasContainer: {
     alignItems: 'center',
+    marginVertical: 8,
+  },
+  pathHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: CANVAS_WIDTH,
     marginBottom: 6,
   },
-  spineNodeDot: {
-    width: 24,
-    height: 24,
+  pathTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  canvasBox: {
     borderRadius: 12,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 3,
-  },
-  tierTag: {
-    marginLeft: 10,
-    fontSize: 10.5,
-    letterSpacing: 0.6,
-  },
-  nodeCard: {
-    borderRadius: 10,
-    padding: 12,
-    marginLeft: 12,
+    borderWidth: 1,
     position: 'relative',
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  cardTopRay: {
+  nodeOrbWrapper: {
     position: 'absolute',
-    top: 0,
-    left: '15%',
-    right: '15%',
-    height: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 56,
+    height: 56,
+    zIndex: 10,
   },
-  nodeCardHeader: {
+  nodeOrb: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  orbStatusBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nodeOrbLabelPill: {
+    position: 'absolute',
+    top: 50,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    width: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orbLabelText: {
+    fontSize: 8.5,
+    textAlign: 'center',
+  },
+  inspectionCard: {
+    marginTop: 8,
+  },
+  inspectHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  nodeHeaderLeft: {
+  inspectHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     marginRight: 8,
   },
-  nodeIconBox: {
-    width: 38,
-    height: 38,
+  inspectIconBox: {
+    width: 42,
+    height: 42,
     borderRadius: 8,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  perksBox: {
-    padding: 8,
+  inspectPerksBox: {
+    padding: 10,
     borderRadius: 6,
     borderWidth: 1,
     gap: 4,
     marginBottom: 8,
   },
-  perkRow: {
+  inspectPerkRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  contractsUnlockedRow: {
+  contractsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginVertical: 4,
   },
-  nodeActionRow: {
+  inspectActionRow: {
+    marginTop: 10,
     borderTopWidth: 1,
-    paddingTop: 8,
+    paddingTop: 10,
   },
-  unlockedActiveBadge: {
+  activeCertifiedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
+    padding: 10,
+    borderRadius: 6,
+    borderWidth: 1,
   },
-  lockedRequirementRow: {
+  lockedWarningBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
+    padding: 10,
+    borderRadius: 6,
+    borderWidth: 1,
   },
 });
