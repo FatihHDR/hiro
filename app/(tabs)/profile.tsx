@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '../../hooks/useTheme';
+import { useHaptics } from '../../hooks/useHaptics';
 import { useAppState } from '../../context/AppStateContext';
 import {
   Text,
@@ -18,11 +19,15 @@ import {
   ProgressBar,
   Divider,
 } from '../../components/ui';
+import { CareerSkillTreeModal } from '../../components/skill-tree/CareerSkillTreeModal';
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
+  const { trigger } = useHaptics();
   const router = useRouter();
   const { user, logout } = useAppState();
+
+  const [isSkillTreeVisible, setIsSkillTreeVisible] = useState(false);
 
   const getKycBadgeColor = (): BadgeColor => {
     switch (user.verificationStatus) {
@@ -89,6 +94,43 @@ export default function ProfileScreen() {
             valueText={`${user.xp.toLocaleString()} / ${user.nextLevelXp.toLocaleString()} XP`}
             color={colors.primary}
             height={8}
+            style={{ marginTop: 12 }}
+          />
+        </TacticalCard>
+
+        {/* Career Skill Trees & Progression Banner */}
+        <TacticalCard accent="cyan" elevated style={styles.skillTreeBanner}>
+          <View style={styles.skillTreeBannerHeader}>
+            <View style={[styles.skillIconBox, { backgroundColor: `${colors.primary}20`, borderColor: colors.primary }]}>
+              <Ionicons name="git-network" size={24} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={styles.skillTreeTitleRow}>
+                <Text variant="h3" color={colors.primary}>
+                  CAREER SKILL TREES
+                </Text>
+                <Badge
+                  label={`${user.unlockedSkillNodeIds.length} ACTIVE`}
+                  color="emerald"
+                  variant="status"
+                />
+              </View>
+              <Text variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                Buka cabang spesialisasi (HVAC Komersial, Cybersecurity, Heavy Recovery) untuk membuka kontrak korporat bernilai tinggi.
+              </Text>
+            </View>
+          </View>
+
+          <Button
+            title="OPEN CAREER SKILL TREE // RPG GRAPH"
+            variant="primary"
+            size="md"
+            fullWidth
+            leftIcon={<Ionicons name="git-network-outline" size={18} color={colors.textInverse} />}
+            onPress={() => {
+              trigger('selection');
+              setIsSkillTreeVisible(true);
+            }}
             style={{ marginTop: 12 }}
           />
         </TacticalCard>
@@ -186,7 +228,7 @@ export default function ProfileScreen() {
               ))
             ) : (
               <Text variant="caption" color={colors.textMuted}>
-                No skills certified yet. Submit KYC to add certified skills.
+                No skills certified yet. Unlock Skill Tree nodes or submit KYC.
               </Text>
             )}
           </View>
@@ -216,6 +258,12 @@ export default function ProfileScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Career Skill Tree RPG Modal */}
+      <CareerSkillTreeModal
+        visible={isSkillTreeVisible}
+        onClose={() => setIsSkillTreeVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -250,6 +298,26 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     marginTop: 12,
+  },
+  skillTreeBanner: {
+    marginBottom: 12,
+  },
+  skillTreeBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  skillIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skillTreeTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   kycBanner: {
     marginBottom: 8,

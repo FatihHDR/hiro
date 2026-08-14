@@ -30,6 +30,8 @@ export interface UserProfile {
   rating: number;
   completedMissions: number;
   skills: string[];
+  unlockedSkillNodeIds: string[];
+  skillPoints: number;
   mentorInfo: {
     isMentor: boolean;
     sidekickCount: number;
@@ -70,6 +72,7 @@ interface AppStateContextType {
   releaseEscrow: (amount: number) => void;
   activeMissionId: string | null;
   setActiveMissionId: (id: string | null) => void;
+  unlockSkillNode: (nodeId: string, xpCost: number, newSkillName: string) => boolean;
 }
 
 const initialUserProfile: UserProfile = {
@@ -89,6 +92,8 @@ const initialUserProfile: UserProfile = {
   rating: 4.9,
   completedMissions: 48,
   skills: ['HVAC Repair', 'Server Maintenance', 'Roadside Towing', 'Network Security'],
+  unlockedSkillNodeIds: ['hvac_1', 'cyber_1', 'mech_1', 'hvac_2', 'cyber_2'],
+  skillPoints: 3,
   mentorInfo: {
     isMentor: true,
     sidekickCount: 1,
@@ -133,6 +138,8 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
       rating: 5.0,
       completedMissions: 0,
       skills: [],
+      unlockedSkillNodeIds: ['hvac_1', 'cyber_1', 'mech_1'],
+      skillPoints: 1,
       mentorInfo: {
         isMentor: false,
         sidekickCount: 0,
@@ -189,10 +196,12 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
       const newXp = prev.xp + amount;
       let newLevel = prev.level;
       let nextLevelXp = prev.nextLevelXp;
+      let newSkillPoints = prev.skillPoints;
 
       if (newXp >= nextLevelXp) {
         newLevel += 1;
         nextLevelXp += 2500;
+        newSkillPoints += 1; // Gain 1 Skill Point on level up
       }
 
       return {
@@ -200,8 +209,34 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
         xp: newXp,
         level: newLevel,
         nextLevelXp,
+        skillPoints: newSkillPoints,
       };
     });
+  };
+
+  const unlockSkillNode = (nodeId: string, xpCost: number, newSkillName: string): boolean => {
+    if (user.unlockedSkillNodeIds.includes(nodeId)) {
+      return true;
+    }
+
+    if (user.xp < xpCost) {
+      return false;
+    }
+
+    setUser((prev) => {
+      const updatedSkills = prev.skills.includes(newSkillName)
+        ? prev.skills
+        : [...prev.skills, newSkillName];
+
+      return {
+        ...prev,
+        xp: Math.max(0, prev.xp - xpCost),
+        unlockedSkillNodeIds: [...prev.unlockedSkillNodeIds, nodeId],
+        skills: updatedSkills,
+      };
+    });
+
+    return true;
   };
 
   const addCoins = (amount: number) => {
@@ -247,6 +282,7 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
         releaseEscrow,
         activeMissionId,
         setActiveMissionId,
+        unlockSkillNode,
       }}
     >
       {children}

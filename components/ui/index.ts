@@ -9,3 +9,4 @@ export * from './SegmentedControl';
 export * from './Avatar';
 export * from './TacticalHeader';
 export * from './Divider';
+export * from './SwipeToAccept';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, Pressable } from 'react-native';
+import { View, StyleSheet, ViewStyle, StyleProp, Pressable } from 'react-native';
 import { BorderRadii, Spacing } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useHaptics } from '../../hooks/useHaptics';
@@ -11,8 +11,8 @@ export interface TacticalCardProps {
   accent?: AccentColorType;
   elevated?: boolean;
   onPress?: () => void;
-  style?: ViewStyle;
-  contentStyle?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
   headerTag?: string;
   testID?: string;
 }
@@ -59,22 +59,43 @@ export const TacticalCard: React.FC<TacticalCardProps> = ({
     }
   };
 
-  const cardStyle: ViewStyle = {
+  const cardBaseStyle: ViewStyle = {
     backgroundColor: elevated ? colors.surfaceElevated : colors.surface,
     borderColor: getAccentBorderColor(),
     borderWidth: accent !== 'none' ? 1.5 : 1,
   };
 
-  const CardContainer = onPress ? Pressable : View;
+  if (onPress) {
+    return (
+      <Pressable
+        testID={testID}
+        onPress={handlePress}
+        style={({ pressed }) => [
+          styles.container,
+          cardBaseStyle,
+          style,
+          pressed && { opacity: 0.9, transform: [{ scale: 0.995 }] },
+        ]}
+      >
+        {accent !== 'none' && (
+          <View
+            style={[
+              styles.accentBar,
+              { backgroundColor: getAccentBorderColor() },
+            ]}
+          />
+        )}
+        <View style={[styles.content, contentStyle]}>{children}</View>
+      </Pressable>
+    );
+  }
 
   return (
-    <CardContainer
+    <View
       testID={testID}
-      onPress={onPress ? handlePress : undefined}
-      style={({ pressed }: { pressed?: boolean }) => [
+      style={[
         styles.container,
-        cardStyle,
-        pressed && onPress ? { opacity: 0.9, transform: [{ scale: 0.995 }] } : null,
+        cardBaseStyle,
         style,
       ]}
     >
@@ -87,7 +108,7 @@ export const TacticalCard: React.FC<TacticalCardProps> = ({
         />
       )}
       <View style={[styles.content, contentStyle]}>{children}</View>
-    </CardContainer>
+    </View>
   );
 };
 
