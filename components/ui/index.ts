@@ -10,3 +10,4 @@ export * from './Avatar';
 export * from './TacticalHeader';
 export * from './Divider';
 export * from './SwipeToAccept';
+export * from './bottom-menu';

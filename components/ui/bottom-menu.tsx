@@ -4,7 +4,6 @@ import {
   View,
   Pressable,
   Animated,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -23,8 +22,6 @@ export interface MenuBarItem {
 interface CustomBottomMenuProps extends BottomTabBarProps {
   items?: MenuBarItem[];
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export const BottomMenuBar: React.FC<CustomBottomMenuProps> = ({
   state,
@@ -75,7 +72,7 @@ export const BottomMenuBar: React.FC<CustomBottomMenuProps> = ({
         ]),
       ]).start();
     }
-  }, [activeIndex, itemLayouts]);
+  }, [activeIndex, itemLayouts, tooltipScale, tooltipX]);
 
   const handleItemLayout = (index: number, x: number, width: number) => {
     setItemLayouts((prev) => ({
@@ -164,6 +161,10 @@ export const BottomMenuBar: React.FC<CustomBottomMenuProps> = ({
               iconName = isFocused ? 'compass' : 'compass-outline';
             } else if (route.name === 'explore') {
               iconName = isFocused ? 'list' : 'list-outline';
+            } else if (route.name === 'raids') {
+              iconName = isFocused ? 'shield-half' : 'shield-outline';
+            } else if (route.name === 'vault') {
+              iconName = isFocused ? 'wallet' : 'wallet-outline';
             } else if (route.name === 'profile') {
               iconName = isFocused ? 'person' : 'person-outline';
             }
