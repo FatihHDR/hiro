@@ -76,8 +76,13 @@ export const Button: React.FC<EnterpriseButtonProps> = ({
         return {
           container: {
             backgroundColor: colors.primary,
-            borderColor: colors.primary,
+            borderColor: 'rgba(255, 255, 255, 0.4)',
             borderWidth: 1,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.35,
+            shadowRadius: 8,
+            elevation: 4,
           },
           text: {
             color: colors.textInverse,
@@ -88,9 +93,14 @@ export const Button: React.FC<EnterpriseButtonProps> = ({
       case 'secondary':
         return {
           container: {
-            backgroundColor: colors.surfaceElevated,
+            backgroundColor: `${colors.surfaceElevated}F0`,
             borderColor: colors.border,
             borderWidth: 1,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 2,
           },
           text: {
             color: colors.textPrimary,
@@ -101,9 +111,14 @@ export const Button: React.FC<EnterpriseButtonProps> = ({
       case 'outline':
         return {
           container: {
-            backgroundColor: 'transparent',
-            borderColor: colors.primary,
+            backgroundColor: `${colors.primary}10`,
+            borderColor: `${colors.primary}90`,
             borderWidth: 1.5,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 2,
           },
           text: {
             color: colors.primary,
@@ -115,8 +130,13 @@ export const Button: React.FC<EnterpriseButtonProps> = ({
         return {
           container: {
             backgroundColor: colors.crimson,
-            borderColor: colors.crimson,
+            borderColor: 'rgba(255, 255, 255, 0.5)',
             borderWidth: 1.5,
+            shadowColor: colors.crimson,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.45,
+            shadowRadius: 12,
+            elevation: 8,
           },
           text: {
             color: '#FFFFFF',
@@ -128,7 +148,7 @@ export const Button: React.FC<EnterpriseButtonProps> = ({
       case 'danger':
         return {
           container: {
-            backgroundColor: 'transparent',
+            backgroundColor: `${colors.crimson}15`,
             borderColor: colors.crimson,
             borderWidth: 1.5,
           },
@@ -238,7 +258,7 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
-    transform: [{ scale: 0.985 }],
+    transform: [{ scale: 0.97 }],
   },
   disabled: {
     opacity: 0.45,

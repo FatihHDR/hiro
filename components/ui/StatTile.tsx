@@ -43,19 +43,41 @@ export const StatTile: React.FC<EnterpriseStatTileProps> = ({
       style={({ pressed }: { pressed?: boolean }) => [
         styles.container,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
+          backgroundColor: `${colors.surface}F5`,
+          borderColor: `${effectiveAccent}35`,
+          shadowColor: effectiveAccent,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.18,
+          shadowRadius: 6,
+          elevation: 3,
         },
-        pressed && onPress ? { opacity: 0.85, transform: [{ scale: 0.98 }] } : null,
+        pressed && onPress ? { opacity: 0.85, transform: [{ scale: 0.97 }] } : null,
         style as any,
       ]}
     >
+      {/* 21st.dev Light Ray Highlight */}
+      <View
+        style={[
+          styles.topRay,
+          { backgroundColor: `${effectiveAccent}50` },
+        ]}
+      />
+
       <View style={styles.headerRow}>
-        <Text variant="caption" weight="semibold" style={styles.label}>
+        <Text variant="caption" weight="semibold" color={colors.textSecondary} style={styles.label}>
           {label}
         </Text>
         {icon && (
-          <View style={[styles.iconWrapper, { backgroundColor: 'rgba(255,255,255,0.04)' }]}>
+          <View
+            style={[
+              styles.iconWrapper,
+              {
+                backgroundColor: `${effectiveAccent}15`,
+                borderColor: `${effectiveAccent}35`,
+                borderWidth: 1,
+              },
+            ]}
+          >
             {icon}
           </View>
         )}
@@ -63,15 +85,23 @@ export const StatTile: React.FC<EnterpriseStatTileProps> = ({
 
       <Text
         variant="statValue"
-        style={{ color: effectiveAccent }}
+        style={[
+          styles.valueText,
+          {
+            color: effectiveAccent,
+          },
+        ]}
       >
         {value}
       </Text>
 
       {subValue && (
-        <Text variant="caption" style={styles.subValue}>
-          {subValue}
-        </Text>
+        <View style={styles.subValueRow}>
+          <View style={[styles.miniDot, { backgroundColor: effectiveAccent }]} />
+          <Text variant="caption" color={colors.textMuted} style={styles.subValue}>
+            {subValue}
+          </Text>
+        </View>
       )}
     </Container>
   );
@@ -84,7 +114,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flex: 1,
     minWidth: 100,
-    cursor: 'pointer',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  topRay: {
+    position: 'absolute',
+    top: 0,
+    left: '20%',
+    right: '20%',
+    height: 1,
   },
   headerRow: {
     flexDirection: 'row',
@@ -101,8 +139,22 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: BorderRadii.xs,
   },
-  subValue: {
+  valueText: {
+    letterSpacing: 0.5,
+    marginVertical: 2,
+  },
+  subValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: Spacing['2xs'],
+  },
+  miniDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginRight: 5,
+  },
+  subValue: {
     fontSize: 10,
   },
 });

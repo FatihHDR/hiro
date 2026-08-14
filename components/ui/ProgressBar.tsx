@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { BorderRadii, Spacing } from '../../constants/theme';
+import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { Spacing } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from './Text';
 
@@ -11,7 +11,7 @@ export interface EnterpriseProgressBarProps {
   color?: string;
   height?: number;
   segmented?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const ProgressBar: React.FC<EnterpriseProgressBarProps> = ({
@@ -20,7 +20,6 @@ export const ProgressBar: React.FC<EnterpriseProgressBarProps> = ({
   valueText,
   color,
   height = 8,
-  segmented = false,
   style,
 }) => {
   const { colors } = useTheme();
@@ -32,12 +31,12 @@ export const ProgressBar: React.FC<EnterpriseProgressBarProps> = ({
       {(label || valueText) && (
         <View style={styles.labelRow}>
           {label && (
-            <Text variant="caption" weight="semibold" style={styles.label}>
+            <Text variant="caption" weight="semibold" color={colors.textSecondary} style={styles.label}>
               {label}
             </Text>
           )}
           {valueText && (
-            <Text variant="mono" style={{ color: activeColor }}>
+            <Text variant="mono" weight="bold" style={{ color: activeColor, fontSize: 11 }}>
               {valueText}
             </Text>
           )}
@@ -49,8 +48,8 @@ export const ProgressBar: React.FC<EnterpriseProgressBarProps> = ({
           styles.track,
           {
             height,
-            backgroundColor: colors.surfaceElevated,
-            borderColor: colors.border,
+            backgroundColor: `${colors.surfaceElevated}F0`,
+            borderColor: 'rgba(255, 255, 255, 0.08)',
           },
         ]}
       >
@@ -60,9 +59,15 @@ export const ProgressBar: React.FC<EnterpriseProgressBarProps> = ({
             {
               width: `${clampedProgress * 100}%`,
               backgroundColor: activeColor,
+              shadowColor: activeColor,
             },
           ]}
-        />
+        >
+          {/* 21st.dev Glowing Leading Edge Dot */}
+          {clampedProgress > 0.05 && (
+            <View style={[styles.leadingGlow, { backgroundColor: '#FFFFFF' }]} />
+          )}
+        </View>
       </View>
     </View>
   );
@@ -82,15 +87,29 @@ const styles = StyleSheet.create({
   label: {
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    fontSize: 10,
   },
   track: {
     width: '100%',
-    borderRadius: BorderRadii.xs,
+    borderRadius: 9999,
     overflow: 'hidden',
     borderWidth: 1,
   },
   fill: {
     height: '100%',
-    borderRadius: BorderRadii.none,
+    borderRadius: 9999,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    position: 'relative',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  leadingGlow: {
+    width: 3,
+    height: '80%',
+    borderRadius: 2,
+    marginRight: 2,
+    opacity: 0.8,
   },
 });

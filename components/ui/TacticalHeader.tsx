@@ -15,7 +15,6 @@ export interface EnterpriseTacticalHeaderProps {
 }
 
 export const TacticalHeader: React.FC<EnterpriseTacticalHeaderProps> = ({
-  title,
   showRoleSwitcher = true,
 }) => {
   const { colors, toggleTheme, isDark } = useTheme();
@@ -32,8 +31,8 @@ export const TacticalHeader: React.FC<EnterpriseTacticalHeaderProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: colors.surface,
-          borderBottomColor: colors.border,
+          backgroundColor: `${colors.surface}FA`,
+          borderBottomColor: 'rgba(0, 229, 255, 0.2)',
         },
       ]}
     >
@@ -47,8 +46,10 @@ export const TacticalHeader: React.FC<EnterpriseTacticalHeaderProps> = ({
           />
           <View style={styles.profileText}>
             <View style={styles.callsignRow}>
-              <View style={[styles.statusDot, { backgroundColor: colors.emerald }]} />
-              <Text variant="mono" weight="bold" style={styles.callsign}>
+              <View style={[styles.statusRing, { borderColor: `${colors.emerald}50` }]}>
+                <View style={[styles.statusDot, { backgroundColor: colors.emerald }]} />
+              </View>
+              <Text variant="mono" weight="bold" color={colors.primary} style={styles.callsign}>
                 {user.callsign}
               </Text>
             </View>
@@ -63,8 +64,11 @@ export const TacticalHeader: React.FC<EnterpriseTacticalHeaderProps> = ({
             onPress={handleToggleTheme}
             style={({ pressed }) => [
               styles.iconBtn,
-              { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
-              pressed && { opacity: 0.7 },
+              {
+                backgroundColor: colors.surfaceElevated,
+                borderColor: 'rgba(0, 229, 255, 0.25)',
+              },
+              pressed && { opacity: 0.75, transform: [{ scale: 0.94 }] },
             ]}
           >
             <Ionicons
@@ -97,18 +101,24 @@ export const TacticalHeader: React.FC<EnterpriseTacticalHeaderProps> = ({
         </View>
       )}
 
-      {/* Telemetry Bar */}
-      <View style={[styles.telemetryBar, { backgroundColor: colors.background }]}>
+      {/* 21st.dev Modern Telemetry Bar */}
+      <View style={[styles.telemetryBar, { backgroundColor: `${colors.background}E0`, borderColor: colors.border }]}>
         <View style={styles.telemetryItem}>
           <Ionicons name="pulse" size={12} color={colors.primary} />
-          <Text variant="caption" mono style={styles.telemetryText}>
+          <Text variant="caption" mono style={[styles.telemetryText, { color: colors.primary }]}>
             LATENCY: &lt; 3MS
           </Text>
         </View>
         <View style={styles.telemetryItem}>
           <Ionicons name="radio" size={12} color={colors.emerald} />
           <Text variant="caption" mono style={[styles.telemetryText, { color: colors.emerald }]}>
-            STATUS: ACTIVE
+            PROTOCOL: ACTIVE
+          </Text>
+        </View>
+        <View style={styles.telemetryItem}>
+          <Ionicons name="lock-closed" size={12} color={colors.amber} />
+          <Text variant="caption" mono style={[styles.telemetryText, { color: colors.amber }]}>
+            ESCROW: SECURED
           </Text>
         </View>
       </View>
@@ -139,23 +149,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  statusRing: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    marginRight: 6,
   },
   callsign: {
     letterSpacing: 0.8,
+    fontSize: 13,
   },
   rightActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadii.md,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -169,8 +188,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: BorderRadii.xs,
+    borderWidth: 1,
     marginTop: Spacing.xs + 2,
   },
   telemetryItem: {
@@ -178,7 +198,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   telemetryText: {
-    fontSize: 10,
+    fontSize: 9,
     marginLeft: 4,
+    letterSpacing: 0.4,
   },
 });

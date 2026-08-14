@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, ViewStyle } from 'react-native';
-import { BorderRadii, Spacing } from '../../constants/theme';
+import { Spacing } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useHaptics } from '../../hooks/useHaptics';
 import { Text } from './Text';
@@ -39,8 +39,8 @@ export function SegmentedControl<T extends string = string>({
       style={[
         styles.container,
         {
-          backgroundColor: colors.surfaceElevated,
-          borderColor: colors.border,
+          backgroundColor: `${colors.surface}F0`,
+          borderColor: 'rgba(0, 229, 255, 0.2)',
         },
         style,
       ]}
@@ -51,12 +51,18 @@ export function SegmentedControl<T extends string = string>({
           <Pressable
             key={opt.value}
             onPress={() => handleSelect(opt.value)}
-            style={[
+            style={({ pressed }) => [
               styles.segment,
               isSelected && {
-                backgroundColor: colors.surface,
-                borderColor: colors.primary,
+                backgroundColor: `${colors.surfaceElevated}`,
+                borderColor: 'rgba(0, 229, 255, 0.4)',
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 2,
               },
+              pressed && { opacity: 0.75, transform: [{ scale: 0.98 }] },
             ]}
           >
             {opt.icon && <View style={styles.icon}>{opt.icon}</View>}
@@ -79,7 +85,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     padding: 3,
-    borderRadius: BorderRadii.md,
+    borderRadius: 9999,
     borderWidth: 1,
   },
   segment: {
@@ -89,7 +95,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadii.sm - 1,
+    borderRadius: 9999,
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -99,5 +105,6 @@ const styles = StyleSheet.create({
   label: {
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    fontSize: 10,
   },
 });

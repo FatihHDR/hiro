@@ -19,8 +19,8 @@ export interface SwipeToAcceptProps {
   disabled?: boolean;
 }
 
-const BUTTON_HEIGHT = 50;
-const THUMB_SIZE = 42;
+const BUTTON_HEIGHT = 52;
+const THUMB_SIZE = 44;
 
 export const SwipeToAccept: React.FC<SwipeToAcceptProps> = ({
   onAccept,
@@ -99,18 +99,21 @@ export const SwipeToAccept: React.FC<SwipeToAcceptProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: isSuccess ? `${colors.emerald}20` : colors.surfaceElevated,
-          borderColor: isSuccess ? colors.emerald : colors.border,
+          backgroundColor: isSuccess ? `${colors.emerald}20` : `${colors.surface}FA`,
+          borderColor: isSuccess ? colors.emerald : 'rgba(0, 229, 255, 0.3)',
         },
       ]}
     >
+      {/* Subtle Light Ray Highlight */}
+      <View style={styles.lightRay} />
+
       {/* Animated Filled Progress Track */}
       <Animated.View
         style={[
           styles.progressTrack,
           {
             width: isSuccess ? '100%' : progressBgWidth,
-            backgroundColor: isSuccess ? colors.emerald : `${primaryColor}25`,
+            backgroundColor: isSuccess ? colors.emerald : `${primaryColor}20`,
           },
         ]}
       />
@@ -127,7 +130,7 @@ export const SwipeToAccept: React.FC<SwipeToAcceptProps> = ({
         </Text>
       </Animated.View>
 
-      {/* Swipe Thumb */}
+      {/* Swipe Thumb Pill with Glow */}
       {!isSuccess && (
         <Animated.View
           {...panResponder.panHandlers}
@@ -156,19 +159,33 @@ export const SwipeToAccept: React.FC<SwipeToAcceptProps> = ({
 const styles = StyleSheet.create({
   container: {
     height: BUTTON_HEIGHT,
-    borderRadius: 8,
+    borderRadius: 9999,
     borderWidth: 1,
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
     marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lightRay: {
+    position: 'absolute',
+    top: 0,
+    left: '20%',
+    right: '20%',
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    zIndex: 2,
   },
   progressTrack: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    borderRadius: 7,
+    borderRadius: 9999,
   },
   textContainer: {
     position: 'absolute',
@@ -179,7 +196,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: THUMB_SIZE,
   },
   label: {
-    fontSize: 11,
+    fontSize: 10.5,
     letterSpacing: 0.8,
     textAlign: 'center',
   },
@@ -188,14 +205,16 @@ const styles = StyleSheet.create({
     left: 4,
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    borderRadius: 6,
+    borderRadius: THUMB_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    elevation: 4,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
+    elevation: 6,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
     cursor: 'pointer',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
 });

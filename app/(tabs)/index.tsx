@@ -409,25 +409,31 @@ export default function TacticalWarRoomScreen() {
             <Divider label="// LIVE BEACON RADAR MAP" />
 
             {/* Tactical Radar Display Container */}
-            <View style={[styles.radarBox, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <View style={[styles.radarBox, { borderColor: 'rgba(0, 229, 255, 0.35)', backgroundColor: 'rgba(10, 16, 26, 0.95)' }]}>
+              {/* Concentric Sci-Fi Radar Rings */}
+              <View style={[styles.radarConcentricRing, { width: '85%', height: '85%', borderColor: 'rgba(0, 229, 255, 0.15)' }]} />
+              <View style={[styles.radarConcentricRing, { width: '58%', height: '58%', borderColor: 'rgba(0, 229, 255, 0.22)' }]} />
+              <View style={[styles.radarConcentricRing, { width: '30%', height: '30%', borderColor: 'rgba(0, 229, 255, 0.3)' }]} />
+
               {/* Grid Telemetry Overlay */}
               <View style={styles.gridOverlay}>
                 {[...Array(5)].map((_, i) => (
                   <View
                     key={`h-${i}`}
-                    style={[styles.gridHorizontal, { borderColor: colors.border, top: `${(i + 1) * 20}%` }]}
+                    style={[styles.gridHorizontal, { borderColor: 'rgba(255, 255, 255, 0.05)', top: `${(i + 1) * 20}%` }]}
                   />
                 ))}
                 {[...Array(5)].map((_, i) => (
                   <View
                     key={`v-${i}`}
-                    style={[styles.gridVertical, { borderColor: colors.border, left: `${(i + 1) * 20}%` }]}
+                    style={[styles.gridVertical, { borderColor: 'rgba(255, 255, 255, 0.05)', left: `${(i + 1) * 20}%` }]}
                   />
                 ))}
               </View>
 
               {/* Center User Node (Hero) */}
               <View style={[styles.centerNode, { backgroundColor: colors.primary, borderColor: colors.background }]} />
+              <View style={[styles.centerPulseRing, { borderColor: 'rgba(0, 229, 255, 0.4)' }]} />
 
               {/* Interactive Mission Beacons */}
               {filteredBeacons.map((beacon) => {
@@ -747,6 +753,25 @@ const styles = StyleSheet.create({
     marginTop: -5,
     borderRadius: 5,
     borderWidth: 2,
+  },
+  radarConcentricRing: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    borderRadius: 9999,
+    borderWidth: 1,
+    transform: [{ translateX: '-50%' as any }, { translateY: '-50%' as any }],
+  },
+  centerPulseRing: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: 22,
+    height: 22,
+    marginLeft: -11,
+    marginTop: -11,
+    borderRadius: 11,
+    borderWidth: 1,
   },
   beaconMarker: {
     position: 'absolute',
