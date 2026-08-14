@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -6,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ThemeProvider, useEnterpriseTheme } from '../context/ThemeContext';
 import { AppStateProvider } from '../context/AppStateContext';
+import { TacticalSplashScreen } from '../components/splash/TacticalSplashScreen';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -13,6 +15,7 @@ export const unstable_settings = {
 
 function RootLayoutContent() {
   const { isDark, colors } = useEnterpriseTheme();
+  const [showSplash, setShowSplash] = useState(true);
 
   const customNavigationTheme = {
     ...(isDark ? DarkTheme : DefaultTheme),
@@ -45,6 +48,14 @@ function RootLayoutContent() {
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Tactical Specs' }} />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      {/* 21st.dev Animated Tactical Boot Splash Screen */}
+      {showSplash && (
+        <TacticalSplashScreen
+          durationMs={2400}
+          onFinish={() => setShowSplash(false)}
+        />
+      )}
     </NavigationThemeProvider>
   );
 }

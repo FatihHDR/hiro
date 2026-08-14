@@ -107,7 +107,6 @@ export const BottomMenuBar: React.FC<CustomBottomMenuProps> = ({
             {
               transform: [
                 { translateX: tooltipX },
-                { translateX: -50 }, // offset half of 100px tooltip width
                 { scale: tooltipScale },
               ],
               opacity: tooltipOpacity,
@@ -129,6 +128,7 @@ export const BottomMenuBar: React.FC<CustomBottomMenuProps> = ({
               variant="mono"
               weight="bold"
               color={colors.primary}
+              numberOfLines={1}
               style={styles.tooltipText}
             >
               {activeLabel}
@@ -233,19 +233,20 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: 'absolute',
-    top: -36,
+    top: -38,
     left: 0,
     zIndex: 10000,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 100,
+    width: 200,
+    marginLeft: -100,
   },
   tooltipPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 4.5,
-    borderRadius: 8,
+    borderRadius: 9999,
     borderWidth: 1,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.45,

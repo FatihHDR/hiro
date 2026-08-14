@@ -104,6 +104,7 @@ export const Badge: React.FC<EnterpriseBadgeProps> = ({
         variant="caption"
         mono={variant === 'rank' || variant === 'status'}
         weight="semibold"
+        numberOfLines={1}
         style={{
           color: palette.text,
           fontSize: 9.5,
@@ -126,6 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     borderWidth: 1,
     alignSelf: 'flex-start',
+    flexShrink: 0,
   },
   dotRing: {
     width: 10,
@@ -135,6 +137,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 4,
+    flexShrink: 0,
   },
   dot: {
     width: 5,
@@ -143,5 +146,6 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginRight: Spacing['2xs'] + 2,
+    flexShrink: 0,
   },
 });

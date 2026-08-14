@@ -9,6 +9,7 @@ export interface EnterpriseStatTileProps {
   label: string;
   value: string | number;
   subValue?: string;
+  badge?: string;
   icon?: React.ReactNode;
   accentColor?: string;
   style?: StyleProp<ViewStyle>;
@@ -19,6 +20,7 @@ export const StatTile: React.FC<EnterpriseStatTileProps> = ({
   label,
   value,
   subValue,
+  badge,
   icon,
   accentColor,
   style,
@@ -43,62 +45,82 @@ export const StatTile: React.FC<EnterpriseStatTileProps> = ({
       style={({ pressed }: { pressed?: boolean }) => [
         styles.container,
         {
-          backgroundColor: `${colors.surface}F5`,
-          borderColor: `${effectiveAccent}35`,
+          backgroundColor: colors.surface,
+          borderColor: `${effectiveAccent}40`,
           shadowColor: effectiveAccent,
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.18,
-          shadowRadius: 6,
-          elevation: 3,
         },
-        pressed && onPress ? { opacity: 0.85, transform: [{ scale: 0.97 }] } : null,
+        pressed && onPress ? { opacity: 0.85, transform: [{ scale: 0.98 }] } : null,
         style as any,
       ]}
     >
-      {/* 21st.dev Light Ray Highlight */}
+      {/* 21st.dev Top Light Ray Highlight */}
       <View
         style={[
           styles.topRay,
-          { backgroundColor: `${effectiveAccent}50` },
+          { backgroundColor: effectiveAccent },
         ]}
       />
 
+      {/* Header Row: Label & Icon/Badge */}
       <View style={styles.headerRow}>
-        <Text variant="caption" weight="semibold" color={colors.textSecondary} style={styles.label}>
+        <Text
+          variant="caption"
+          weight="bold"
+          color={colors.textSecondary}
+          numberOfLines={1}
+          style={styles.label}
+        >
           {label}
         </Text>
-        {icon && (
+
+        {badge ? (
+          <View style={[styles.badgePill, { backgroundColor: `${effectiveAccent}20`, borderColor: effectiveAccent }]}>
+            <Text variant="mono" weight="bold" color={effectiveAccent} numberOfLines={1} style={styles.badgeText}>
+              {badge}
+            </Text>
+          </View>
+        ) : icon ? (
           <View
             style={[
               styles.iconWrapper,
               {
                 backgroundColor: `${effectiveAccent}15`,
                 borderColor: `${effectiveAccent}35`,
-                borderWidth: 1,
               },
             ]}
           >
             {icon}
           </View>
-        )}
+        ) : null}
       </View>
 
-      <Text
-        variant="statValue"
-        style={[
-          styles.valueText,
-          {
-            color: effectiveAccent,
-          },
-        ]}
-      >
-        {value}
-      </Text>
+      {/* Value Row */}
+      <View style={styles.valueRow}>
+        <Text
+          variant="h3"
+          mono
+          numberOfLines={1}
+          style={[
+            styles.valueText,
+            {
+              color: effectiveAccent,
+            },
+          ]}
+        >
+          {value}
+        </Text>
+      </View>
 
+      {/* SubValue Row */}
       {subValue && (
         <View style={styles.subValueRow}>
           <View style={[styles.miniDot, { backgroundColor: effectiveAccent }]} />
-          <Text variant="caption" color={colors.textMuted} style={styles.subValue}>
+          <Text
+            variant="caption"
+            color={colors.textMuted}
+            numberOfLines={1}
+            style={styles.subValue}
+          >
             {subValue}
           </Text>
         </View>
@@ -109,52 +131,82 @@ export const StatTile: React.FC<EnterpriseStatTileProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
     borderRadius: BorderRadii.md,
     borderWidth: 1,
     flex: 1,
-    minWidth: 100,
+    minHeight: 90,
+    justifyContent: 'space-between',
     overflow: 'hidden',
     position: 'relative',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
   },
   topRay: {
     position: 'absolute',
     top: 0,
-    left: '20%',
-    right: '20%',
-    height: 1,
+    left: '15%',
+    right: '15%',
+    height: 1.5,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
   },
   label: {
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    fontSize: 9,
+    fontSize: 9.5,
+    flex: 1,
+    marginRight: 4,
+  },
+  badgePill: {
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  badgeText: {
+    fontSize: 8,
+    letterSpacing: 0.4,
   },
   iconWrapper: {
-    padding: 4,
-    borderRadius: BorderRadii.xs,
+    width: 22,
+    height: 22,
+    borderRadius: 5,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  valueRow: {
+    marginVertical: 1,
   },
   valueText: {
+    fontSize: 17,
     letterSpacing: 0.5,
-    marginVertical: 2,
+    fontWeight: '800',
   },
   subValueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing['2xs'],
+    marginTop: 2,
   },
   miniDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
     marginRight: 5,
+    flexShrink: 0,
   },
   subValue: {
     fontSize: 10,
+    flex: 1,
   },
 });

@@ -23,6 +23,7 @@ import { CareerSkillTreeModal } from '../../components/skill-tree/CareerSkillTre
 import { EscrowVaultModal } from '../../components/escrow/EscrowVaultModal';
 import { DualCurrencyShopModal } from '../../components/shop/DualCurrencyShopModal';
 import { SidekickMentorshipModal } from '../../components/mentorship/SidekickMentorshipModal';
+import { KycVerificationModal } from '../../components/profile/KycVerificationModal';
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
@@ -34,6 +35,7 @@ export default function ProfileScreen() {
   const [isEscrowModalVisible, setIsEscrowModalVisible] = useState(false);
   const [isShopModalVisible, setIsShopModalVisible] = useState(false);
   const [isMentorshipModalVisible, setIsMentorshipModalVisible] = useState(false);
+  const [isKycModalVisible, setIsKycModalVisible] = useState(false);
 
   const getKycBadgeColor = (): BadgeColor => {
     switch (user.verificationStatus) {
@@ -265,10 +267,13 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Button
-              title={user.verificationStatus === 'verified' ? 'UPDATE' : 'VERIFY'}
-              variant={user.verificationStatus === 'verified' ? 'outline' : 'primary'}
+              title={user.verificationStatus === 'verified' ? 'UPDATE' : user.verificationStatus === 'elite' ? 'ELITE' : 'VERIFY'}
+              variant={user.verificationStatus === 'elite' ? 'outline' : 'primary'}
               size="sm"
-              onPress={() => router.push('/kyc-verification')}
+              onPress={() => {
+                trigger('selection');
+                setIsKycModalVisible(true);
+              }}
             />
           </View>
         </TacticalCard>
@@ -383,6 +388,12 @@ export default function ProfileScreen() {
       <DualCurrencyShopModal
         visible={isShopModalVisible}
         onClose={() => setIsShopModalVisible(false)}
+      />
+
+      {/* KYC & Identity Integrity Verification Modal */}
+      <KycVerificationModal
+        visible={isKycModalVisible}
+        onClose={() => setIsKycModalVisible(false)}
       />
     </SafeAreaView>
   );

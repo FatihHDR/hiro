@@ -15,7 +15,6 @@ import { useAppState } from '../../context/AppStateContext';
 import {
   Text,
   TacticalHeader,
-  StatTile,
   TacticalCard,
   Badge,
   BadgeColor,
@@ -288,41 +287,127 @@ export default function TacticalWarRoomScreen() {
       <TacticalHeader />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* User Telemetry & RPG Progression Bar */}
-        <View style={styles.telemetrySection}>
+        {/* Tactical Hero Telemetry & Reputation Hub Card (21st.dev Design) */}
+        <TacticalCard accent="cyan" elevated style={styles.telemetryCardWrapper}>
+          {/* Top Row: Rank & Level Progress */}
+          <View style={styles.rankHeaderRow}>
+            <View style={styles.rankBadgeBox}>
+              <View style={[styles.rankIconCircle, { backgroundColor: `${colors.primary}20`, borderColor: colors.primary }]}>
+                <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
+              </View>
+              <View style={{ marginLeft: 8 }}>
+                <Text variant="caption" weight="bold" color={colors.textMuted} style={{ fontSize: 9 }}>
+                  OPERATOR TELEMETRY
+                </Text>
+                <Text variant="body" weight="bold" color={colors.primary} style={{ fontSize: 13 }}>
+                  {`LVL ${user.level} // ${user.rankTitle.toUpperCase()}`}
+                </Text>
+              </View>
+            </View>
+            <Badge label="ACTIVE DUTY" color="emerald" variant="status" />
+          </View>
+
           <ProgressBar
             progress={user.xp / user.nextLevelXp}
-            label={`RANK PROGRESS // LEVEL ${user.level}`}
+            label="TACTICAL EXP PROGRESSION"
             valueText={`${user.xp.toLocaleString()} / ${user.nextLevelXp.toLocaleString()} XP`}
             color={colors.primary}
             height={6}
+            style={{ marginTop: 8, marginBottom: 12 }}
           />
 
-          {/* Key Metric Tiles */}
-          <View style={styles.statsGrid}>
-            <StatTile
-              label="ESCROW VAULT"
-              value={`Rp ${(user.escrowBalance / 1000).toFixed(0)}k`}
-              subValue="Tap to Open Vault"
-              accentColor={colors.emerald}
-              icon={<Ionicons name="lock-closed-outline" size={16} color={colors.emerald} />}
-              onPress={() => setIsEscrowModalVisible(true)}
-            />
-            <StatTile
-              label="HERO COINS"
-              value={user.heroCoins}
-              subValue="Tap to Open Shop"
-              accentColor={colors.amber}
-              icon={<Ionicons name="shield-outline" size={16} color={colors.amber} />}
-              onPress={() => setIsShopModalVisible(true)}
-            />
-            <StatTile
-              label="RATING / MISSIONS"
-              value={`${user.rating}★`}
-              subValue={`${user.completedMissions} Done`}
-              accentColor={colors.primary}
-              icon={<Ionicons name="star-outline" size={16} color={colors.primary} />}
-            />
+          {/* 4-Cell Integrated Bento Telemetry Grid */}
+          <View style={[styles.bentoGrid, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}>
+            {/* Cell 1: Escrow Vault */}
+            <Pressable
+              onPress={() => {
+                trigger('selection');
+                setIsEscrowModalVisible(true);
+              }}
+              style={({ pressed }) => [
+                styles.bentoCell,
+                { borderRightWidth: 1, borderBottomWidth: 1, borderRightColor: colors.border, borderBottomColor: colors.border },
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <View style={styles.bentoCellHeader}>
+                <Text variant="caption" weight="bold" color={colors.textSecondary} style={{ fontSize: 9 }}>
+                  ESCROW VAULT
+                </Text>
+                <Ionicons name="lock-closed" size={12} color={colors.emerald} />
+              </View>
+              <Text variant="h3" mono color={colors.emerald} numberOfLines={1} style={styles.bentoValue}>
+                {`Rp ${(user.escrowBalance / 1000).toFixed(0)}k`}
+              </Text>
+              <Text variant="caption" color={colors.textMuted} numberOfLines={1} style={{ fontSize: 9 }}>
+                Tap to Manage ➔
+              </Text>
+            </Pressable>
+
+            {/* Cell 2: Hero Coins */}
+            <Pressable
+              onPress={() => {
+                trigger('selection');
+                setIsShopModalVisible(true);
+              }}
+              style={({ pressed }) => [
+                styles.bentoCell,
+                { borderBottomWidth: 1, borderBottomColor: colors.border },
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <View style={styles.bentoCellHeader}>
+                <Text variant="caption" weight="bold" color={colors.textSecondary} style={{ fontSize: 9 }}>
+                  HERO COINS
+                </Text>
+                <Ionicons name="shield" size={12} color={colors.amber} />
+              </View>
+              <Text variant="h3" mono color={colors.amber} numberOfLines={1} style={styles.bentoValue}>
+                {`${user.heroCoins} HC`}
+              </Text>
+              <Text variant="caption" color={colors.textMuted} numberOfLines={1} style={{ fontSize: 9 }}>
+                Reward Shop ➔
+              </Text>
+            </Pressable>
+
+            {/* Cell 3: Citizen Rating */}
+            <View style={[styles.bentoCell, { borderRightWidth: 1, borderRightColor: colors.border }]}>
+              <View style={styles.bentoCellHeader}>
+                <Text variant="caption" weight="bold" color={colors.textSecondary} style={{ fontSize: 9 }}>
+                  CITIZEN RATING
+                </Text>
+                <Ionicons name="star" size={12} color={colors.amber} />
+              </View>
+              <View style={styles.ratingValueRow}>
+                <Text variant="h3" mono color={colors.amber} numberOfLines={1} style={styles.bentoValue}>
+                  {user.rating}
+                </Text>
+                <View style={styles.starCluster}>
+                  {[...Array(5)].map((_, i) => (
+                    <Ionicons key={i} name="star" size={9} color={colors.amber} style={{ marginLeft: 1 }} />
+                  ))}
+                </View>
+              </View>
+              <Text variant="caption" color={colors.textMuted} numberOfLines={1} style={{ fontSize: 9 }}>
+                Top 1% Citizen Rating
+              </Text>
+            </View>
+
+            {/* Cell 4: Missions Completed */}
+            <View style={styles.bentoCell}>
+              <View style={styles.bentoCellHeader}>
+                <Text variant="caption" weight="bold" color={colors.textSecondary} style={{ fontSize: 9 }}>
+                  TOTAL MISSIONS
+                </Text>
+                <Ionicons name="checkmark-done-circle" size={13} color={colors.primary} />
+              </View>
+              <Text variant="h3" mono color={colors.primary} numberOfLines={1} style={styles.bentoValue}>
+                {`${user.completedMissions} Done`}
+              </Text>
+              <Text variant="caption" color={colors.textMuted} numberOfLines={1} style={{ fontSize: 9 }}>
+                100% Success Protocol
+              </Text>
+            </View>
           </View>
 
           {/* Apprentice Field Comms Bar (If Hero is a Mentor with Sidekicks) */}
@@ -334,19 +419,19 @@ export default function TacticalWarRoomScreen() {
               }}
               style={[
                 styles.apprenticeCommsBar,
-                { backgroundColor: `${colors.primary}12`, borderColor: colors.primary },
+                { backgroundColor: `${colors.primary}12`, borderColor: colors.primary, marginTop: 10 },
               ]}
             >
               <View style={styles.apprenticeLeft}>
                 <View style={[styles.liveDotSmall, { backgroundColor: colors.emerald }]} />
-                <Text variant="caption" weight="bold" color={colors.primary} style={{ marginLeft: 6 }}>
-                  SIDEKICK ACTIVE IN FIELD ({user.mentorInfo.sidekicks[0]?.callsign || 'NOVA-03'})
+                <Text variant="caption" weight="bold" color={colors.primary} numberOfLines={1} style={{ marginLeft: 6, flex: 1 }}>
+                  SIDEKICK IN FIELD ({user.mentorInfo.sidekicks[0]?.callsign || 'NOVA-03'})
                 </Text>
               </View>
               <Badge label="OPEN LIVE COMMS" color="cyan" variant="status" />
             </Pressable>
           )}
-        </View>
+        </TacticalCard>
 
         {/* Active Mission HUD (If a mission is currently in-progress) */}
         {activeMissionData && (
@@ -687,13 +772,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 36,
   },
-  telemetrySection: {
-    marginTop: 12,
+  telemetryCardWrapper: {
+    marginTop: 10,
+    marginBottom: 8,
   },
-  statsGrid: {
+  rankHeaderRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  rankBadgeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rankIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bentoGrid: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  bentoCell: {
+    width: '50%',
+    padding: 10,
+    justifyContent: 'space-between',
+    minHeight: 74,
+  },
+  bentoCellHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bentoValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginVertical: 2,
+  },
+  ratingValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  starCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   apprenticeCommsBar: {
     flexDirection: 'row',
@@ -703,11 +834,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    marginTop: 8,
   },
   apprenticeLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
   },
   liveDotSmall: {
     width: 6,
